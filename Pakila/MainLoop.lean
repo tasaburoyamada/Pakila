@@ -40,7 +40,7 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
   match action with
   | .CallLlm msgs =>
     -- LLM呼び出しの場合、StructuredLlmResponseを期待
-    match ← Pakila.runAction action dispatcher with
+    match ← Pakila.runAction action dispatcher s.activeLlm with
     | Except.ok jsonStr =>
       match Json.parse jsonStr with
       | .ok json =>
@@ -50,7 +50,7 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
           if let some act := structuredResponse.action then
             Pakila.renderAiAction act
             -- 実際にactをBashコマンドとして実行
-            match ← Pakila.runAction (.ExecuteBash act) dispatcher with
+            match ← Pakila.runAction (.ExecuteBash act) dispatcher s.activeLlm with
             | Except.ok bashOutput =>
               Pakila.renderSystemOutput bashOutput
               let toolMsg : Lyceum.Message := { role := .tool, parts := [.text bashOutput] }
@@ -80,7 +80,7 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
       TerminalEnv.println (applyColor .red s!"[Error]: LLM Action failed: {e}")
       runLoop (maxTurns - 1) config nextS dispatcher
   | _ => -- その他のアクションは直接実行して結果を表示
-    match ← Pakila.runAction action dispatcher with
+    match ← Pakila.runAction action dispatcher s.activeLlm with
     | Except.ok "Quit" => do
         (← IO.getStdout).flush
         (← IO.getStderr).flush
@@ -106,6 +106,6 @@ partial def runTestLoop (s : InterpreterState) (dispatcher : Dispatcher) (inputs
   | input :: rest =>
     IO.println s!"DEBUG: Testing input: {input}"
     let (action, nextS) := Pakila.transition s [.text input]
-    let _ ← Pakila.runAction action dispatcher
+    let _ ← Pakila.runAction action dispatcher s.activeLlm
     -- Process the result of the action if needed, then continue
     runTestLoop { nextS with history := [{ role := .tool, parts := [.text s!"Processed: {input}"] }] } dispatcher rest

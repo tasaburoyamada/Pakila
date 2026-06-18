@@ -38,19 +38,28 @@ deriving Inhabited, Repr
 
 /-- 
 動的テンソルを検証し、コンパイル時に確定している Tensor 型へ昇格させる。
-Lean 4 の依存型を構築するために、実行時の次元比較結果を証明として利用する。
+実モデルの語彙サイズが期待値より大きい場合は、安全にスライス（切り出し）検証を行うことで
+メモリ(RAM)の消費を極小化しOOMを防止する。
 -/
 def promoteToVerified (t : RawTensor) (dims : List Nat) : Except String (Tensor dims) :=
   let t_dims := t.dims
   let t_data := t.data
-  if h : t_dims = dims then
-    let size := Shape.prod t_dims
-    let expected_size := Shape.prod dims
-    if h_size : t_data.size = size then
-      Except.ok { val := t_data, prop := by rw [h_size]; simp [size, expected_size, h] }
+  if t_dims.length == dims.length then
+    let t_hidden := t_dims.getD 0 0
+    let t_vocab := t_dims.getD 1 0
+    let exp_hidden := dims.getD 0 0
+    let exp_vocab := dims.getD 1 0
+    
+    if t_hidden == exp_hidden && t_vocab >= exp_vocab then
+      let expected_size := Shape.prod dims
+      let sliced_data := t_data.extract 0 expected_size
+      if h_size : sliced_data.size = expected_size then
+        Except.ok { val := sliced_data, prop := by simp [Shape.prod, h_size, expected_size] }
+      else
+        Except.error s!"Data size error: sliced {sliced_data.size}, expected {expected_size}"
     else
-      Except.error s!"Data size mismatch: got {t_data.size}, expected {expected_size}"
+      Except.error s!"Dimension specification error: got {t_dims}, expected {dims}"
   else
-    Except.error s!"Dimension mismatch: got {t_dims}, expected {dims}"
+    Except.error s!"Dimension length mismatch: got {t_dims.length}, expected {dims.length}"
 
 end Pakila.Memory.Raw

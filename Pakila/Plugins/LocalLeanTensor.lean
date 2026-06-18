@@ -64,15 +64,15 @@ instance : LlmBackend LocalLeanTensorLlm where
     -- 2. トークン化
     let tokenIds := Pakila.Tokenizer.unigramTokenize self.tokenizerInstance.vocab prompt
 
-    -- 3. 検証と昇格 (4Bモデルのパラメータを使用)
-    let token_embd ← match promoteToVerified modelRaw.token_embd [3815, 3072] with 
+    -- 3. 検証と昇格 (本物モデルのパラメータを使用: Hidden=2560, Vocab=3815)
+    let token_embd ← match promoteToVerified modelRaw.token_embd [2560, 3815] with 
         | .ok t => pure t 
         | .error e => return .error (AppError.ExecutionError e)
     let input_vec := embeddingLookup token_embd tokenIds
 
-    -- 4. 推論ループ (検証済みの構造体を使用)
+    -- 4. 推論ループ (検証済みの構造体を使用: Hidden=2560)
     let layerRaw := modelRaw.layers[0]!
-    let attn_q ← match promoteToVerified layerRaw.attn_q [3072, 3072] with 
+    let attn_q ← match promoteToVerified layerRaw.attn_q [2560, 2560] with 
         | .ok t => pure t 
         | .error e => return .error (AppError.ExecutionError e)
     

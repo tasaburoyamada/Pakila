@@ -25,36 +25,36 @@ deriving Repr, Inhabited, BEq, Lean.ToJson, Lean.FromJson
 
 /-- Gemma用 Transformer 層 -/
 structure GemmaLayer where
-  attn_q : Tensor [3072, 3072]
-  attn_k : Tensor [3072, 3072]
-  attn_v : Tensor [3072, 3072]
-  attn_o : Tensor [3072, 3072]
-  ffn_gate : Tensor [3072, 3072]
-  ffn_up : Tensor [3072, 3072]
-  ffn_down : Tensor [3072, 3072]
-  attn_norm : Tensor [3072]
-  post_attn_norm : Tensor [3072]
-  ffn_norm : Tensor [3072]
-  post_ffw_norm : Tensor [3072]
+  attn_q : Tensor [2560, 2560]
+  attn_k : Tensor [2560, 2560]
+  attn_v : Tensor [2560, 2560]
+  attn_o : Tensor [2560, 2560]
+  ffn_gate : Tensor [2560, 2560]
+  ffn_up : Tensor [2560, 2560]
+  ffn_down : Tensor [2560, 2560]
+  attn_norm : Tensor [2560]
+  post_attn_norm : Tensor [2560]
+  ffn_norm : Tensor [2560]
+  post_ffw_norm : Tensor [2560]
 deriving Inhabited
 
 /-- 検証済みGemmaモデル -/
 structure VerifiedGemmaModel where
-  token_embd : Tensor [3815, 3072]
+  token_embd : Tensor [2560, 3815]
   layers : Array VerifiedGemmaLayer
-  norm_final : Tensor [3072]
+  norm_final : Tensor [2560]
 deriving Inhabited
 
 /-- Token ID から埋め込みベクトルを取得 -/
-def embeddingLookup (embd_weight : Tensor [3815, 3072]) (token_ids : List Nat) : Tensor [token_ids.length, 3072] :=
+def embeddingLookup (embd_weight : Tensor [2560, 3815]) (token_ids : List Nat) : Tensor [token_ids.length, 2560] :=
   let seq_len := token_ids.length
-  let data := Array.ofFn (n := seq_len * 3072) (fun idx =>
-    let row := idx.val / 3072
-    let col := idx.val % 3072
+  let data := Array.ofFn (n := seq_len * 2560) (fun idx =>
+    let row := idx.val / 2560
+    let col := idx.val % 2560
     if h : row < token_ids.length then
       let id := token_ids[row]!
-      if h_emb : id * 3072 + col < embd_weight.val.size then
-        embd_weight.val[id * 3072 + col]
+      if h_emb : col * 3815 + id < embd_weight.val.size then
+        embd_weight.val[col * 3815 + id]
       else 0.0
     else 0.0
   )

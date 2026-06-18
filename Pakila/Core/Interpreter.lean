@@ -5,7 +5,8 @@ import Pakila.Protocol.Types
 import Pakila.Core.Bash
 import Pakila.Plugins.Sandbox
 import Pakila.Plugins.LocalLeanTensor
-import Lyceum.Inference
+import Pakila.Core.Primitives
+import Pakila.Protocol.Types
 import Batteries.Lean.Json
 
 open Pakila.Protocol
@@ -14,17 +15,11 @@ open Lean.Json -- Add this line
 namespace Pakila
 
 /-- 物理アクションの実行層: バグはこの関数にのみ集約される -/
-def runAction (action : MachineAction) (dispatcher : Dispatcher) : IO (Except String String) := do
+def runAction (action : MachineAction) (dispatcher : Dispatcher) (activeLlm : LlmInstance) : IO (Except String String) := do
   match action with
   | .Quit => pure (Except.ok "Quit")
   | .CallLlm msgs => do
-      let tokenizer : Pakila.Tokenizer := { modelName := "dummy", vocab := default }
-      let client : LocalLeanTensorLlm := {
-        modelPath := "../../models/gemma-4-E4B-it-Q4_K_M.gguf",
-        tokenizerInstance := tokenizer,
-        template := .alpaca
-      }
-      match ← Lyceum.LlmBackend.streamChatCompletion client msgs none with
+      match ← Lyceum.LlmBackend.streamChatCompletion activeLlm msgs none with
       | Except.ok (responseMsgs : List Lyceum.Message) =>
           let rawText := responseMsgs.foldl (fun acc (m : Lyceum.Message) => acc ++ m.content) ""
           let structuredResponse := parseStructuredLlmResponse rawText
