@@ -1,0 +1,8 @@
+# Scenario: Command Loop & Logic
+[Topic Model]: CLI Interaction
+[Strategic Intent]: Test pure command parsing and dispatcher dispatch
+
+User: /help
+Agent: (Verify ShowHelp action is returned)
+User: /exit
+Agent: (Verify Quit action is returned)

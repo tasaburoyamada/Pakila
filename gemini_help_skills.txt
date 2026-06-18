@@ -1,0 +1,15 @@
+gemini skills <command>
+
+Manage agent skills.
+
+Commands:
+  gemini skills list [--all]                         Lists discovered agent skills.
+  gemini skills enable <name>                        Enables an agent skill.
+  gemini skills disable <name> [--scope]             Disables an agent skill.
+  gemini skills install <source> [--scope] [--path]  Installs an agent skill from a git repository URL or a local path.
+  gemini skills link <path>                          Links an agent skill from a local path. Updates to the source will be reflected immediately.
+  gemini skills uninstall <name> [--scope]           Uninstalls an agent skill by name.
+
+Options:
+  -d, --debug  Run in debug mode (open debug console with F12)  [boolean] [default: false]
+  -h, --help   Show help  [boolean]

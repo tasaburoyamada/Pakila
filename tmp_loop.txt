@@ -1,0 +1,56 @@
+    IO.sleep 50
+    waitTask task start timeoutMs
+
+/-- 非同期タスクの実行とタイムアウト監視を行う -/
+def runWithTimeout {α : Type} (action : IO (Except AppError α)) (timeoutMs : Nat) : IO (Except AppError α) := do
+  let task ← IO.asTask action
+  let start ← IO.monoMsNow
+  waitTask task start timeoutMs
+
+/-- 物理的な IO を実行するドライバー -/
+partial def runLoop (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) : IO Unit := do
+  IO.print (applyColor Color.cyan "User > ")
+  (← IO.getStdout).flush
+  let input ← (← IO.getStdin).getLine
+  
+  if input.isEmpty then return
+  let inputStr := input.trimAscii.toString
+  if inputStr == "exit" || inputStr == "quit" then return
+
+  let (action, nextS) := transition s inputStr
+  
+  match action with
+  | CallLlm msgs =>
+      let llmAction : IO (Except AppError (List Message)) := match client with
+        | .remote c => LlmBackend.streamChatCompletion c msgs none
+        | .local c => LlmBackend.streamChatCompletion c msgs none
+      
+      let res ← runWithTimeout llmAction 2000
+      match res with
+      | .ok newMessages =>
+          IO.println s!"AI > {renderMessage (newMessages.getLast!)}"
+          runLoop config client modelName { nextS with history := nextS.history ++ newMessages }
+      | .error .Timeout =>
+          IO.println (applyColor Color.red "  [SLA Violation] Timed out.")
+          runLoop config client modelName nextS
+      | .error (.AuthError e) =>
+          let keyOpt ← Pakila.CLI.AuthUI.triggerAuthFlow
+          match keyOpt with
+          | some newKey =>
+              let newClient := client.updateApiKey newKey
+              runLoop { config with llmApiKey := some newKey } newClient modelName s
+          | none => return
+      | .error e =>
+          IO.println s!"[Error]: {repr e}"
+          runLoop config client modelName nextS
+  | ExecuteBash cmd =>
+      let engine : BashEngine := { cwd := ".", env := [] }
+      let _ ← ExecutionEngine.execute engine cmd "bash"
+      runLoop config client modelName nextS
+  | WaitAuth =>
+      let _ ← Pakila.CLI.AuthUI.triggerAuthFlow
+      runLoop config client modelName nextS
+  | Quit =>
+      return
+
+end Pakila

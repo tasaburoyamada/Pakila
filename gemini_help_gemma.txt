@@ -1,0 +1,14 @@
+gemini gemma
+
+Manage local Gemma model routing
+
+Commands:
+  gemini gemma setup   Download and configure Gemma local model routing
+  gemini gemma start   Start the LiteRT-LM server
+  gemini gemma stop    Stop the LiteRT-LM server
+  gemini gemma status  Check Gemma local model routing status
+  gemini gemma logs    View LiteRT-LM server logs
+
+Options:
+  -d, --debug  Run in debug mode (open debug console with F12)  [boolean] [default: false]
+  -h, --help   Show help  [boolean]

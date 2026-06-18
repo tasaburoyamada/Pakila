@@ -1,0 +1,132 @@
+Pakila/CLI/Terminal.lean:19:deriving instance Inhabited for IO.FS.DirEntry
+Pakila/Core/Delegator.lean:61:  try IO.FS.removeFile tempFile catch _ => pure ()
+Pakila/Core/Environment.lean:68:    IO.println s
+Pakila/Core/Environment.lean:105:      IO.println s!"[Environment] Browser failed. Please open manually: {url}"
+Pakila/Core/Environment.lean:114:    let content ← IO.FS.readFile historyPath
+Pakila/Core/Environment.lean:120:    let h ← IO.FS.Handle.mk historyPath .append
+Pakila/Core/Environment.lean:124:  readFile path := IO.FS.readFile path
+Pakila/Core/Environment.lean:125:  readBinFile path := IO.FS.readBinFile path
+Pakila/Core/Environment.lean:126:  writeFile path content := IO.FS.writeFile path content
+Pakila/Core/Environment.lean:127:  createDirAll path := IO.FS.createDirAll path
+Pakila/Core/Environment.lean:128:  rename old new := IO.FS.rename old new
+Pakila/CLI/Theme.lean:45:  c.toAnsi ++ text ++ "\u001b[0m"
+Pakila/CLI/Theme.lean:48:  "\u001b[1m" ++ text ++ "\u001b[22m"
+Pakila/CLI/Terminal.lean:80:                  buffer := buffer.take pos ++ buffer.drop (pos + 1)
+Pakila/CLI/Terminal.lean:139:                      buffer := buffer ++ ghostText.toList
+Pakila/CLI/Terminal.lean:151:                buffer := buffer.take (pos - 1) ++ buffer.drop pos
+Pakila/CLI/Terminal.lean:170:                buffer := buffer.take pos ++ [c] ++ buffer.drop pos
+Pakila/CLI/Terminal.lean:188:      flatOptions := flatOptions ++ [(s!"[{cat}] {name}", (name, inst))]
+Pakila/CLI/Exporter.lean:26:    TerminalEnv.writeFile path (header ++ body)
+Pakila/CLI/MemoryUI.lean:34:      let sources := ["Global", "Workspace"] ++ ctx.scopedCtxs.map (fun (p, _) => s!"Scoped ({p})") ++ ["Private"]
+Pakila/CLI/Progress.lean:19:  let bar := replicate filled '█' ++ replicate (20 - filled) '░'
+Pakila/CLI/ArgParser.lean:46:    | "--policy" :: p :: rest => parseRunArgs rest { acc with policies := acc.policies ++ [p] }
+Pakila/CLI/ArgParser.lean:50:    | q :: rest => parseRunArgs rest { acc with query := acc.query ++ [q] }
+Pakila/CLI/Renderer.lean:29:  let top := applyColor ProfessionalColors.lightYellow ("╭" ++ String.intercalate "" (List.replicate width "─") ++ "╮")
+Pakila/CLI/Renderer.lean:30:  let bottom := applyColor ProfessionalColors.lightYellow ("╰" ++ String.intercalate "" (List.replicate width "─") ++ "╯")
+Pakila/CLI/Renderer.lean:33:    acc ++ applyColor ProfessionalColors.lightYellow "│" ++ " " ++ l ++ padding ++ applyColor ProfessionalColors.lightYellow "│" ++ "\n"
+Pakila/CLI/Renderer.lean:35:  return top ++ "\n" ++ middle ++ bottom
+Pakila/CLI/Renderer.lean:46:        res := res ++ applyColor ProfessionalColors.gray "╰" ++ String.intercalate "" (List.replicate 60 "─") ++ "\n"
+Pakila/CLI/Renderer.lean:50:        res := res ++ applyColor ProfessionalColors.gray s!"╭─── {lang} " ++ String.intercalate "" (List.replicate (54 - lang.length) "─") ++ "\n"
+Pakila/CLI/Renderer.lean:54:        res := res ++ applyColor ProfessionalColors.gray "│ " ++ line ++ "\n"
+Pakila/CLI/Renderer.lean:64:              boldLine := boldLine ++ applyBold (applyColor ProfessionalColors.brightWhite p)
+Pakila/CLI/Renderer.lean:67:              boldLine := boldLine ++ p
+Pakila/CLI/Renderer.lean:73:          l := "  \x1b[32m•\x1b[0m " ++ (l.drop 2).toString
+Pakila/CLI/Renderer.lean:77:          l := applyColor (.xterm 244) "┃ " ++ (l.drop 2).toString
+Pakila/CLI/Renderer.lean:90:        res := res ++ l ++ "\n"
+Pakila/CLI/Renderer.lean:95:  "\n" ++ applyColor ProfessionalColors.gray s!"[ {model} | {duration.toString.take 3}s ]" ++ "\n"
+Pakila/CLI/Renderer.lean:108:  output := output ++ roleHeader ++ "\n"
+Pakila/CLI/Renderer.lean:112:    | .text t => output := output ++ renderMarkdown t ++ "\n"
+Pakila/CLI/Renderer.lean:113:    | .image mime data => output := output ++ applyColor Color.yellow s!"[IMAGE: {mime} ({data.size} bytes)]\n"
+Pakila/CLI/Renderer.lean:115:        output := output ++ applyColor ProfessionalColors.gray s!"▶ {c.function.name.toUpper}" ++ 
+Pakila/CLI/Renderer.lean:118:        output := output ++ applyColor Color.green s!"✔ {id} RETURNED SUCCESS\n"
+Pakila/CLI/Renderer.lean:122:    output := output ++ renderStatus model duration
+Pakila/CLI/Renderer.lean:127:  let content := msg.parts.foldl (fun acc p => match p with | .text t => acc ++ t | _ => acc) ""
+Pakila/CLI/Renderer.lean:134:  "\n" ++ applyColor Color.blue s!"[ Active Topic: {topic} ]" ++ "\n"
+Pakila/CLI/Protocol.lean:43:      currentBody := currentBody ++ line ++ "\n"
+Pakila/CLI/Protocol.lean:49:  s!"[Topic Model]: {srp.topic}\n" ++
+Pakila/CLI/Protocol.lean:50:  s!"[Strategic Intent]: {srp.intent}\n\n" ++
+Pakila/CLI/Protocol.lean:51:  s!"{srp.body}\n\n" ++
+Pakila/CLI/Protocol.lean:52:  s!"[Summary]: {srp.summary}\n" ++
+Pakila/CLI/App.lean:29:  TerminalEnv.print (clearSeq ++ logo ++ "\n")
+Pakila/CLI/App.lean:67:  let fullSystemPrompt := promptManager.injectInitState sysInfo formattedCtx pattern ++ hookContext
+Pakila/CLI/App.lean:78:    let allModels := categories.foldl (fun acc (_, ms) => acc ++ ms) []
+Pakila/Memory/NativeEmbedding.lean:28:  let full_tokens := #[clsId] ++ token_ids ++ #[sepId]
+Pakila/Governance/McpManager.lean:31:      configs := configs ++ subConfigs
+Pakila/Governance/SkillManager.lean:25:  return projectDir ++ [configDir / "skills"]
+Pakila/Governance/Vlog.lean:42:  let content := nodes.foldl (fun acc n => acc ++ vlogNodeToTokens n) ""
+Pakila/Governance/Vlog.lean:43:  TerminalEnv.writeFile path (content ++ "@EOF\n")
+Pakila/Governance/VlogParser.lean:117:      | .Ctx d s g => acc ++ s!"- Context: Domain={d}, Sub={s}, Goal={g}\n"
+Pakila/Governance/VlogParser.lean:118:      | .Bias p m s d c => acc ++ s!"- Bias Weights: P={p}, M={m}, S={s}, D={d}, C={c}\n"
+Pakila/Governance/VlogParser.lean:119:      | .Delta w l => acc ++ s!"- Decision Delta: {w} > {l}\n"
+Pakila/Governance/VlogParser.lean:120:      | .ShiftPlus t => acc ++ s!"- Enabled Constraint: {t}\n"
+Pakila/Governance/VlogParser.lean:121:      | .ShiftMinus t => acc ++ s!"- Suppressed Constraint: {t}\n"
+Pakila/Governance/VlogParser.lean:122:      | .ShiftMandatory t => acc ++ s!"- Mandatory Constraint: {t}\n"
+Pakila/Governance/VlogParser.lean:123:      | .Concept ts => acc ++ s!"- Active Concepts: {ts}\n"
+Pakila/Governance/VlogParser.lean:136:          updatedParts := (.text (vlogStr ++ "\n" ++ t)) :: updatedParts
+Pakila/Plugins/CodeExtractor.lean:31:          loop rest true acc (current ++ line ++ "\n")
+Pakila/Plugins/LocalLeanTensor.lean:53:    acc ++ s!"{role}\n{content}\n"
+Pakila/Plugins/WasmLoader.lean:22:      plugins := plugins ++ [{ name := name, path := path.toString }]
+Pakila/Core/ContextLoader.lean:60:    parts.foldl (fun a (name, c) => a ++ s!"--- {name} ---\n{c}\n") acc
+Pakila/Core/ContextLoader.lean:65:    baseOutput ++ s!"--- Global Context (GEMINI.md) ---\n{ctx.globalCtx}\n"
+Pakila/Core/ContextLoader.lean:70:    output ++ s!"--- Workspace Root Context ---\n{ctx.workspaceCtx}\n"
+Pakila/Core/ContextLoader.lean:74:  output ++ "</loaded_context>"
+Pakila/Core/Persistence.lean:28:  let tempPath := System.FilePath.mk (path.toString ++ ".tmp")
+Pakila/Core/Persistence.lean:29:  let backupPath := System.FilePath.mk (path.toString ++ ".bak")
+Pakila/Core/Persistence.lean:48:  let backupPath := System.FilePath.mk (path.toString ++ ".bak")
+Pakila/Core/LlmManager.lean:99:        categories := categories ++ [("Local Models", models)]
+Pakila/Core/LlmManager.lean:105:            categories := categories ++ [("Hybrid", [hybridModel])]
+Pakila/Core/LlmManager.lean:113:    categories := categories ++ [("Local MCP", models)]
+Pakila/Core/LlmManager.lean:121:        categories := categories ++ [("Gemini API", models)]
+Pakila/Core/Skills.lean:23:      cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/Skills.lean:27:      cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/FileInjector.lean:51:    if t.isEmpty then acc else acc ++ [.text t.trimAscii.toString]
+Pakila/Core/FileInjector.lean:61:        parts := parts ++ newParts
+Pakila/Core/FileInjector.lean:63:        currentText := currentText ++ " " ++ w
+Pakila/Core/FileInjector.lean:65:      currentText := currentText ++ " " ++ w
+Pakila/Core/Search.lean:17:      acc := acc ++ res
+Pakila/Core/Search.lean:25:            acc := acc ++ s!"{e.path}:{i + 1}:{l}\n"
+Pakila/Core/Search.lean:38:      acc := acc ++ res
+Pakila/Core/Search.lean:42:        acc := acc ++ s!"{e.path}\n"
+Pakila/Core/Delegation.lean:21:      cont.runLoop { nextS with history := nextS.history ++ [feedback] }
+Pakila/Core/Bash.lean:40:            cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/Bash.lean:44:            cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/Machine.lean:114:        let nextS := { s with history := s.history ++ [userMsg], turnCount := s.turnCount + 1 }
+Pakila/Core/Machine.lean:118:    let nextS := { s with history := s.history ++ [userMsg], turnCount := s.turnCount + 1 }
+Pakila/Core/FileSystem.lean:19:  let nS := { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/FileSystem.lean:35:  cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/Governance.lean:27:        let feedback := Message.mkText .user (s!"The last change broke the build. Please fix the following errors:\n" ++ res)
+Pakila/Core/Governance.lean:28:        cont.runLoop { nextS with history := nextS.history ++ [feedback] }
+Pakila/Core/MemoryRefinery.lean:42:      return acc ++ s!"\n--- {label} ({p}) ---\n{content}\n"
+Pakila/Core/Memory.lean:21:  cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/Memory.lean:29:  cont.runLoop { nextS with history := nextS.history ++ [toolMsg], vectorDb := newDb }
+Pakila/Core/Generative.lean:18:  cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/Generative.lean:24:  cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/Generative.lean:30:  cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Core/Generative.lean:36:  cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Tokenizer/WordPiece.lean:35:          sub := "##" ++ sub
+Pakila/Tokenizer/WordPiece.lean:53:      allTokens := wordTokens ++ allTokens
+Pakila/Tokenizer/Normalizer.lean:10:  let text := if addSentencePiecePrefix then " " ++ text else text
+Pakila/Tokenizer/Normalizer.lean:29:        bytes := bytes ++ processed.toByteArray
+Pakila/Tokenizer/Vocab.lean:61:  let hexStr := if hex.length == 1 then "0" ++ String.ofList hex else String.ofList hex
+Pakila/Tokenizer/Vocab.lean:62:  let token := "<0x" ++ hexStr.toUpper ++ ">"
+Pakila/MainLoop.lean:87:          let finalS := { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/MainLoop.lean:94:                 let rawText := lastMsg.parts.foldl (fun acc p => match p with | .text t => acc ++ t | _ => acc) ""
+Pakila/MainLoop.lean:154:            let flat := categories.foldl (fun acc c => acc ++ c.2) []
+Pakila/MainLoop.lean:170:            let paddedName := cmd.name ++ padding
+Pakila/MainLoop.lean:212:            let rawText := lastMsg.parts.foldl (fun acc p => match p with | .text t => acc ++ t | _ => acc) ""
+Pakila/MainLoop.lean:231:              let newState := { nextS with vlogState := nextS.vlogState ++ [deltaNode] }
+Pakila/MainLoop.lean:237:          return { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/MainLoop.lean:245:            let feedback := Message.mkText .user (s!"The last change broke the build. Please fix the following errors:\n" ++ res)
+Pakila/MainLoop.lean:246:            return { nextS with history := nextS.history ++ [feedback] }
+Pakila/MainLoop.lean:254:          return { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/MainLoop.lean:259:          return { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/MainLoop.lean:263:          return { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/MainLoop.lean:276:          return { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/MainLoop.lean:281:          return { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/MainLoop.lean:288:          return { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/MainLoop.lean:295:          return { nextS with history := nextS.history ++ [toolMsg] }
+Pakila/Config/Loader.lean:90:  s!"llmModel = \"{config.llmModel}\"\n" ++
+Pakila/Config/Loader.lean:91:  s!"llmApiUrl = \"{config.llmApiUrl}\"\n" ++
+Pakila/Config/Loader.lean:92:  s!"llmApiKey = {apiKey}\n" ++
+Pakila/Config/Loader.lean:93:  s!"systemPrompt = \"{config.systemPrompt}\"\n" ++
+Pakila/Config/Loader.lean:94:  s!"embeddingModelPath = {bertPath}\n" ++

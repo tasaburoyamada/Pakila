@@ -1,0 +1,19 @@
+gemini extensions <command>
+
+Manage Gemini CLI extensions.
+
+Commands:
+  gemini extensions install <source> [--auto-update] [--pre-release]  Installs an extension from a git repository URL or a local path.
+  gemini extensions uninstall [names..]                               Uninstalls one or more extensions.
+  gemini extensions list                                              Lists installed extensions.
+  gemini extensions update [<name>] [--all]                           Updates all extensions or a named extension to the latest version.
+  gemini extensions disable [--scope] <name>                          Disables an extension.
+  gemini extensions enable [--scope] <name>                           Enables an extension.
+  gemini extensions link <path>                                       Links an extension from a local path. Updates made to the local path will always be reflected.
+  gemini extensions new <path> [template]                             Create a new extension from a boilerplate example.
+  gemini extensions validate <path>                                   Validates an extension from a local path.
+  gemini extensions config [name] [setting]                           Configure extension settings.
+
+Options:
+  -d, --debug  Run in debug mode (open debug console with F12)  [boolean] [default: false]
+  -h, --help   Show help  [boolean]

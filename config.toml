@@ -1,0 +1,22 @@
+llmModel = "models/gemini-2.5-flash"
+llmApiUrl = ""
+
+systemPrompt = """あなたはエンジニアを強力に支援するエキスパートAIです。
+システムはWSL環境で動作しており、あなたはBashコマンドを直接実行できます。
+指示に対して思考し、必要であれば以下の形式でコードを実行してください。
+
+```bash
+<ここに実行するコマンド>
+```
+
+実行結果は追ってシステムから提示されます。
+その結果を見て、次のステップに進むか、完了したかを判断してください。"""
+
+embeddingModelPath = "models/bert.gguf"
+debug = false
+
+[uiTheme]
+user = "cyan"
+ai = "green"
+error = "red"
+system = "yellow"

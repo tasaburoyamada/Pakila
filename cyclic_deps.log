@@ -1,0 +1,149 @@
+✖ [21/67] Running Pakila.Core.Types
+error: build cycle detected:
+  pakila/+Pakila.Core.State:exportInfo
+  pakila/+Pakila.Core.Types:importInfo
+  pakila/+Pakila.Core.Types:setup
+  pakila/+Pakila.Core.Types:leanArts
+  pakila/+Pakila.Core.Types:exportInfo
+  pakila/+Pakila.Core.LlmManager:importInfo
+  pakila/+Pakila.Core.LlmManager:setup
+  pakila/+Pakila.Core.LlmManager:leanArts
+  pakila/+Pakila.Core.LlmManager:exportInfo
+  pakila/+Pakila.Core.State:importInfo
+  pakila/+Pakila.Core.State:setup
+  pakila/+Pakila.Core.State:leanArts
+  pakila/+Main:importInfo
+  pakila/+Main:setup
+  pakila/+Main:leanArts
+  pakila/+Main:c
+  pakila/+Main:c.o.export
+  pakila/+Main:c.o
+  pakila/+Main:o
+  pakila/pakila:exe
+  pakila/pakila:default
+  pakila/+Pakila.Core.State:exportInfo
+✖ [25/67] Running Pakila.Core.LlmManager
+error: Pakila/Core/LlmManager.lean: bad import 'Pakila.Core.Types'
+✖ [26/67] Running Pakila.Core.State
+error: build cycle detected:
+  pakila/+Pakila.Core.LlmManager:precompileImports
+  pakila/+Pakila.Core.State:precompileImports
+  pakila/+Pakila.Core.Types:precompileImports
+  pakila/+Pakila.Core.LlmManager:setup
+  pakila/+Pakila.Core.LlmManager:leanArts
+  pakila/+Pakila.Core.LlmManager:exportInfo
+  pakila/+Pakila.Core.State:importInfo
+  pakila/+Pakila.Core.State:setup
+  pakila/+Pakila.Core.State:leanArts
+  pakila/+Pakila.Core.State:exportInfo
+  pakila/+Main:importInfo
+  pakila/+Main:setup
+  pakila/+Main:leanArts
+  pakila/+Main:c
+  pakila/+Main:c.o.export
+  pakila/+Main:c.o
+  pakila/+Main:o
+  pakila/pakila:exe
+  pakila/pakila:default
+  pakila/+Pakila.Core.LlmManager:precompileImports
+⚠ [29/67] Replayed Nomos.Laws
+warning: Nomos/Laws.lean:18:16: Variable name `oNext` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: Nomos/Laws.lean:18:23: Variable name `aNext` is not explicitly referenced.
+
+The binding can be removed (if unused) or named `_` (if used implicitly).
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+✖ [31/67] Running Pakila.Core.Delegator
+error: Pakila/Core/Delegator.lean: bad import 'Pakila.Core.Types'
+error: Pakila/Core/Delegator.lean: bad import 'Pakila.Core.State'
+✖ [34/67] Running Pakila.Core.Machine
+error: Pakila/Core/Machine.lean: bad import 'Pakila.Core.Delegator'
+error: Pakila/Core/Machine.lean: bad import 'Pakila.Core.State'
+✖ [35/67] Running Pakila.Governance.PolicyEngine
+error: Pakila/Governance/PolicyEngine.lean: bad import 'Pakila.Core.Machine'
+error: Pakila/Governance/PolicyEngine.lean: bad import 'Pakila.Core.State'
+✖ [37/67] Running Pakila.Core.Bash
+error: Pakila/Core/Bash.lean: bad import 'Pakila.Core.Types'
+error: Pakila/Core/Bash.lean: bad import 'Pakila.Governance.PolicyEngine'
+✖ [38/67] Running Pakila.Core.Delegation
+error: Pakila/Core/Delegation.lean: bad import 'Pakila.Core.Types'
+error: Pakila/Core/Delegation.lean: bad import 'Pakila.Core.Delegator'
+error: Pakila/Core/Delegation.lean: bad import 'Pakila.Core.State'
+✖ [39/67] Running Pakila.Core.FileSystem
+error: Pakila/Core/FileSystem.lean: bad import 'Pakila.Core.Types'
+error: Pakila/Core/FileSystem.lean: bad import 'Pakila.Core.State'
+✖ [40/67] Running Pakila.Core.Generative
+error: Pakila/Core/Generative.lean: bad import 'Pakila.Core.Types'
+error: Pakila/Core/Generative.lean: bad import 'Pakila.Core.State'
+✖ [41/67] Running Pakila.Core.Governance
+error: Pakila/Core/Governance.lean: bad import 'Pakila.Core.Types'
+error: Pakila/Core/Governance.lean: bad import 'Pakila.Core.State'
+error: Pakila/Core/Governance.lean: bad import 'Pakila.Governance.PolicyEngine'
+✖ [42/67] Running Pakila.Core.Skills
+error: Pakila/Core/Skills.lean: bad import 'Pakila.Core.Types'
+error: Pakila/Core/Skills.lean: bad import 'Pakila.Core.State'
+✖ [43/67] Running Pakila.Core.Dispatcher
+error: Pakila/Core/Dispatcher.lean: bad import 'Pakila.Core.Types'
+error: Pakila/Core/Dispatcher.lean: bad import 'Pakila.Core.Bash'
+error: Pakila/Core/Dispatcher.lean: bad import 'Pakila.Core.Delegation'
+error: Pakila/Core/Dispatcher.lean: bad import 'Pakila.Core.FileSystem'
+error: Pakila/Core/Dispatcher.lean: bad import 'Pakila.Core.Generative'
+error: Pakila/Core/Dispatcher.lean: bad import 'Pakila.Core.Governance'
+error: Pakila/Core/Dispatcher.lean: bad import 'Pakila.Core.Skills'
+error: Pakila/Core/Dispatcher.lean: bad import 'Pakila.Core.State'
+✖ [45/67] Running Pakila.CLI.Terminal
+error: Pakila/CLI/Terminal.lean: bad import 'Pakila.Core.LlmManager'
+✖ [46/67] Running Pakila.Core.Interpreter
+error: Pakila/Core/Interpreter.lean: bad import 'Pakila.Core.Machine'
+error: Pakila/Core/Interpreter.lean: bad import 'Pakila.Core.State'
+error: Pakila/Core/Interpreter.lean: bad import 'Pakila.CLI.Terminal'
+error: Pakila/Core/Interpreter.lean: bad import 'Pakila.Core.Bash'
+✖ [47/67] Running Pakila.MainLoop
+error: Pakila/MainLoop.lean: bad import 'Pakila.Core.Machine'
+error: Pakila/MainLoop.lean: bad import 'Pakila.Core.State'
+error: Pakila/MainLoop.lean: bad import 'Pakila.Core.Interpreter'
+error: Pakila/MainLoop.lean: bad import 'Pakila.Core.Dispatcher'
+error: Pakila/MainLoop.lean: bad import 'Pakila.CLI.Terminal'
+✖ [48/67] Running Main
+error: Main.lean: bad import 'Pakila.Core.State'
+error: Main.lean: bad import 'Pakila.Core.Dispatcher'
+error: Main.lean: bad import 'Pakila.MainLoop'
+error: Main.lean: bad import 'Pakila.Core.Machine'
+✖ [50/67] Running pakila:exe
+error: bad imports (see the 'Main' job for details)
+✖ [51/67] Building Pakila.Core.Interface (4.3s)
+trace: .> LEAN_PATH=/home/pc241139/sandbox/kaihatsu/archives/Old/LeanTensor/.lake/build/lib/lean:/home/pc241139/sandbox/kaihatsu/apps/nomos/.lake/build/lib/lean:/home/pc241139/sandbox/kaihatsu/apps/Lyceum/.lake/build/lib/lean:/home/pc241139/sandbox/kaihatsu/apps/pakila/.lake/build/lib/lean /home/pc241139/.elan/toolchains/leanprover--lean4---v4.31.0-rc1/bin/lean /home/pc241139/sandbox/kaihatsu/apps/pakila/Pakila/Core/Interface.lean -o /home/pc241139/sandbox/kaihatsu/apps/pakila/.lake/build/lib/lean/Pakila/Core/Interface.olean -i /home/pc241139/sandbox/kaihatsu/apps/pakila/.lake/build/lib/lean/Pakila/Core/Interface.ilean -c /home/pc241139/sandbox/kaihatsu/apps/pakila/.lake/build/ir/Pakila/Core/Interface.c --setup /home/pc241139/sandbox/kaihatsu/apps/pakila/.lake/build/ir/Pakila/Core/Interface.setup.json --json
+error: Pakila/Core/Interface.lean:30:57: Application type mismatch: The argument
+  IO.Process.Child
+has type
+  IO.Process.StdioConfig → Type
+but is expected to have type
+  Type
+in the application
+  Except String IO.Process.Child
+error: Lean exited with code 1
+Some required targets logged failures:
+- Pakila.Core.Types
+- Pakila.Core.LlmManager
+- Pakila.Core.State
+- Pakila.Core.Delegator
+- Pakila.Core.Machine
+- Pakila.Governance.PolicyEngine
+- Pakila.Core.Bash
+- Pakila.Core.Delegation
+- Pakila.Core.FileSystem
+- Pakila.Core.Generative
+- Pakila.Core.Governance
+- Pakila.Core.Skills
+- Pakila.Core.Dispatcher
+- Pakila.CLI.Terminal
+- Pakila.Core.Interpreter
+- Pakila.MainLoop
+- Main
+- pakila:exe
+- Pakila.Core.Interface
+error: build failed

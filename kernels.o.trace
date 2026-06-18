@@ -1,0 +1,14 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs": "b9b7a4ad91e4db5c.o",
+ "log":
+ [{"message":
+   ".> cc -c -o kernels.o /home/pc241139/sandbox/kaihatsu/apps/pakila/src/native/kernels.c -I /home/pc241139/.elan/toolchains/leanprover--lean4---v4.31.0/include -I /home/pc241139/sandbox/kaihatsu/apps/pakila/deps/wasmtime/include -fPIC -O3",
+   "level": "trace"}],
+ "inputs":
+ [["/home/pc241139/sandbox/kaihatsu/apps/pakila/src/native/kernels.c",
+   "e7ab5c528bdf1a44"],
+  ["x86_64-unknown-linux-gnu", "53a0e8937c307c28"],
+  ["traceArgs: #[]", "00000000000006bb"],
+  ["<nil>", "00000000000006bb"]],
+ "depHash": "2d2f272c73ca741f"}

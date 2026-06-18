@@ -1,0 +1,23 @@
+Gemini CLI (v0.43.0) provides the following interactive commands and features:
+
+### 1. Interactive Slash Commands (`/`)
+- `/help`: Show all available commands.
+- `/chat` or `/resume`: Browse history, save/load checkpoints, or share transcripts.
+- `/rewind`: Navigate history and revert code/state changes (Shortcut: `Esc Esc`).
+- `/restore [id]`: Undo tool-driven file changes.
+- `/quit`: Exit the session.
+- `/settings`: Open the interactive configuration editor.
+- `/model`: View or change the active Gemini model.
+- `/memory`: Manage hierarchical context from `GEMINI.md` files.
+- `/tools`, `/extensions`, `/mcp`, `/skills`, `/agents`: Manage tools and specialized capabilities.
+
+### 2. Context & System Shortcuts
+- **File Injection (`@`)**: Include file content in your prompt (e.g., `Explain: @src/main.py`).
+- **Shell Passthrough (`!`)**: Run shell commands (e.g., `!ls -la`) or toggle Shell Mode.
+- **Clipboard (`/copy`)**: Copy the last AI response.
+
+### 3. Keyboard Shortcuts
+- **Ctrl+L**: Clear screen.
+- **Ctrl+C**: Cancel generation/action.
+- **Tab**: Autocomplete paths and commands.
+- **Esc Esc**: Open Rewind interface.
