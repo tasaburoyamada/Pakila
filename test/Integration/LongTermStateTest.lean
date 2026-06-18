@@ -17,7 +17,7 @@ open Pakila
 def testSummarizationLoop : IO UInt32 := do
   IO.println "[Test][L4] Long-Term Summarization Stability..."
   -- Align with new LocalLeanTensorLlm structure
-  let localLlm : LocalLeanTensorLlm := { 
+  let localLlm : Inference.Gemma.Backend.LocalLeanTensorLlm := { 
     modelPath := "mock-model",
     mmprojPath := none,
     tokenizerInstance := { modelName := "mock-tokenizer", vocab := Tokenizer.emptyVocab } 

@@ -40,5 +40,6 @@ class TerminalEnv (m : Type → Type) where
   getEnv : String → m (Option String)
   getCurrentDir : m System.FilePath
   runProcess : ProcessSpawnArgs → m (Except String ProcessOutput)
+  renderUserTurn : String → m Unit
 
 end Pakila

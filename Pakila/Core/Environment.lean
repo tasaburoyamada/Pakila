@@ -3,9 +3,11 @@ import Init.System.IO
 import Init.System.FilePath
 import Pakila.Plugins.FFI
 import Pakila.Core.Interface
+import Pakila.CLI.Theme
 
 open Pakila.Plugins
 open Pakila.Plugins.FFI
+open Pakila
 
 namespace Pakila
 
@@ -118,5 +120,10 @@ instance : TerminalEnv IO where
       return .ok { exitCode := 0, stdout := out, stderr := "" }
     catch e =>
       return .error (s!"Process run failed: {e}")
+  
+  renderUserTurn s := do
+    let prompt := Pakila.applyColor .cyan "User > "
+    IO.print (prompt ++ s)
+    (← IO.getStdout).flush
 
 end Pakila

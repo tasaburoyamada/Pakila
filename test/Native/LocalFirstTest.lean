@@ -14,7 +14,7 @@ namespace Pakila.Test.Native
 def testLocalFirstDispatch : IO UInt32 := do
   IO.println "--- Test: Local-First Dispatcher Routing (Fallback Policy) ---"
   
-  let l : LocalLeanTensorLlm := { modelPath := "local.gguf", mmprojPath := none, tokenizerInstance := { modelName := "tok", vocab := Tokenizer.emptyVocab } }
+  let l : Inference.Gemma.Backend.LocalLeanTensorLlm := { modelPath := "local.gguf", mmprojPath := none, tokenizerInstance := { modelName := "tok", vocab := Lyceum.Tokenizer.emptyVocab } }
   let inst := LlmInstance.localEngine l
   
   let isLocal1 := match inst with | .localEngine _ => true | _ => false

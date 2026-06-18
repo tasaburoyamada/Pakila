@@ -25,4 +25,22 @@ def availableSlashCommands : List SlashCommand := [
   { name := "quit",     description := "Pakilaを終了する", template := "/quit" }
 ]
 
+/-- パースされたコマンド -/
+structure ParsedCommand where
+  cmd : SlashCommand
+  args : List String
+deriving Inhabited
+
+/-- スラッシュコマンドをパースする -/
+def parseSlashCommand (input : String) : Option ParsedCommand :=
+  if input.startsWith "/" then
+    let parts := input.splitOn " "
+    let cmdName := parts.head!.drop 1
+    let args := parts.tail
+    match availableSlashCommands.find? (fun c => c.name == cmdName) with
+    | some c => some { cmd := c, args := args }
+    | none => none
+  else
+    none
+
 end Pakila.CLI

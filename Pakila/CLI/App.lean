@@ -61,7 +61,6 @@ def printStartupLogo (model : String) [TerminalEnv IO] : IO Unit := do
 
 /-- CLI アプリケーションのメイン実行ロジック -/
 def run (args : List String) [TerminalEnv IO] : IO Unit := do
-
   let subcommand ← match parseCliArgs args with
     | Except.ok res => pure res
     | Except.error e => TerminalEnv.println s!"[CLI Error]: {repr e}"; return
@@ -70,7 +69,6 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
   | .help =>
     TerminalEnv.println "Usage: pakila [options] [command]\n"
     TerminalEnv.println "Pakila CLI - Defaults to interactive mode.\n"
-    -- (ヘルプ表示の詳細は Main.lean からの移植を継続)
     return
   | .version => TerminalEnv.println "0.43.0"; return
   | .config =>
@@ -129,7 +127,7 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
 
     let mut embModel := none
     let bertPath ← expandPath (config.embeddingModelPath.getD "models/bert.gguf")
-    if ← TerminalEnv.pathExists bertPath then -- Updated pathExists to TerminalEnv
+    if ← TerminalEnv.pathExists bertPath then
       match (← Lyceum.Memory.initNativeEmbedding bertPath.toString) with
       | Except.ok m => embModel := some m
       | Except.error _ => pure ()
@@ -137,7 +135,7 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
     let initialState : InterpreterState := {
       history := [Message.mkText .system fullSystemPrompt],
       vectorDb := initialDb,
-      vlogState := [], -- Add missing field
+      vlogState := [],
       embeddingModel := embModel,
       sessionId := runArgs.session.getD "current",
       interactive := runArgs.prompt.isNone && runArgs.query.isEmpty,
@@ -148,16 +146,15 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
     }
     let initialInput := match runArgs.prompt with | some p => some p | none => if runArgs.query.isEmpty then none else some (String.intercalate " " runArgs.query)
 
-    -- Dispatcherの構築
     let bashEngine : BashEngine := { cwd := currentConfigDir.toString, env := [] }
     let sandboxEngine : SandboxEngine := { cwd := currentConfigDir.toString, env := [], level := .Low }
-    let resourceManager : ResourceManager := {} -- デフォルト値で初期化
+    let resourceManager : ResourceManager := {}
     let dispatcher : Dispatcher := {
       bashEngine := bashEngine,
       sandboxEngine := sandboxEngine,
-      useSandbox := initialState.sandbox, -- InterpreterStateから設定
+      useSandbox := initialState.sandbox,
       resManager := resourceManager,
-      wasmPlugins := [], -- 当面は空
+      wasmPlugins := [],
       taskCounter := 0
     }
 
@@ -167,7 +164,7 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
       | none => initialState
 
     printStartupLogo selectedModelName
-    runLoop 1000 config finalState dispatcher
+    runLoop 1000 config finalState dispatcher categories
   | _ => TerminalEnv.println "Subcommand not fully integrated."
 
 end Pakila.CLI.App
