@@ -22,7 +22,7 @@ def testSummarizationLoop : IO UInt32 := do
     mmprojPath := none,
     tokenizerInstance := { modelName := "mock-tokenizer", vocab := Tokenizer.emptyVocab } 
   }
-  let llm : LlmInstance' := .localEngine localLlm
+  let llm : LlmInstance := .localEngine localLlm
 
   let longHistory := List.replicate 51 (Message.mkText .user "Spam")
   let initialState : InterpreterState := { history := longHistory, vlogState := [], activeLlm := llm, activeModelName := "mock-model" }

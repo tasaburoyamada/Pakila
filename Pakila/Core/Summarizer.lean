@@ -13,6 +13,7 @@ open Lyceum
 namespace Pakila.Core.Summarizer
 
 open Lean hiding Message
+open Pakila
 
 def roleToString : Role -> String
   | .system    => "System"
@@ -24,7 +25,7 @@ def roleToString : Role -> String
 対話履歴を要約して圧縮する。
 LLM を用いて、これまでの経緯を簡潔な Message に変換する。
 -/
-def summarizeHistory (client : LlmInstance') (history : List Message) : IO (Except AppError Message) := do
+def summarizeHistory (client : LlmInstance) (history : List Message) : IO (Except AppError Message) := do
   if history.length < 5 then 
     return Except.ok (history.getLastD (Message.mkText .system "No history"))
   

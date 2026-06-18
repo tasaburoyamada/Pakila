@@ -32,7 +32,7 @@ structure InterpreterState where
   executionMode : ExecutionMode := .Interactive
   configDir : System.FilePath := "."
   selfHealingCount : Nat := 0
-  activeLlm : LlmInstance'
+  activeLlm : LlmInstance
   activeModelName : String
 deriving Inhabited
 

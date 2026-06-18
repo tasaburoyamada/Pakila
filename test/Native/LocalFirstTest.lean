@@ -16,7 +16,7 @@ def testLocalFirstDispatch : IO UInt32 := do
   
   let r : LlmClient := { apiUrl := "http://dummy", apiKey := "key", modelName := some "gemini" }
   let l : LocalLeanTensorLlm := { modelPath := "local.gguf", mmprojPath := none, tokenizerInstance := { modelName := "tok", vocab := Tokenizer.emptyVocab } }
-  let hybrid := LlmInstance'.hybrid r l
+  let hybrid := LlmInstance.hybrid r l
   
   -- Case 1: Standard message (should be Local)
   let history1 := [Message.mkText .user "How do I create a directory in bash?"]

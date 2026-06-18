@@ -4,6 +4,8 @@ import Pakila.MainLoop
 import Pakila.Core.Machine
 import Pakila.Plugins.Dispatcher
 import Pakila.Governance.Vlog
+import Pakila.Core.Primitives
+import Pakila.Config.Loader
 
 open Pakila
 open Pakila.Protocol
@@ -44,4 +46,5 @@ Usage: pakila [--help] [--test <input> ...]"
   
   -- 3. メインループの起動
   IO.println "Pakila v0.43.0 initialized (Logic-Physical Separated)."
-  mainLoop initialState dispatcher
+  let config : AppConfig := default
+  runLoop 1000 config initialState dispatcher
