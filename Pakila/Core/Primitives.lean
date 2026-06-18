@@ -9,12 +9,11 @@ open Lean hiding Message
 
 namespace Pakila
 
-/-- LLMインスタンスの具象表現 -/
+/-- LLMインスタンスの具象表現 (hybrid 関連の残骸を完全に一掃) -/
 inductive LlmInstance where
   | remote (c : LlmClient)
   | localEngine (c : LocalLeanTensorLlm)
   | mcp (c : LlmClient)
-  | hybrid (remote : LlmClient) (localEngine : LocalLeanTensorLlm)
 deriving Repr
 
 instance : Inhabited LlmInstance where

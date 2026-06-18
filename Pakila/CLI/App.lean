@@ -2,6 +2,7 @@ import Pakila
 import Pakila.Memory.VectorDB
 import Pakila.Memory.NativeEmbedding
 import Pakila.Core.DigitalTwin
+import Pakila.Core.ContextLoader -- Add this import
 import Pakila.CLI.RewindUI
 import Pakila.CLI.Prompts
 import Pakila.CLI.TerminalBase
@@ -20,8 +21,25 @@ import Pakila.Plugins.WasmLoader -- WasmPlugin
 open Pakila
 open Lyceum
 open Lean hiding Message
+open Pakila.Core.DigitalTwin -- Add this open
+open Pakila.CLI.Prompts -- Add this open
 
 namespace Pakila.CLI.App
+
+private def getConfigPath : IO System.FilePath := do
+  let localConfig := System.FilePath.mk "config.toml"
+  if ← localConfig.pathExists then return localConfig
+  let home ← Pakila.Plugins.FFI.getHomeDirectoryNative ()
+  let homePath := System.FilePath.mk home
+  return homePath / ".config" / "pakila" / "config.toml"
+
+private def expandPath (path : String) : IO System.FilePath := do
+  if path.startsWith "~" then
+    let home ← Pakila.Plugins.FFI.getHomeDirectoryNative ()
+    let homePath := System.FilePath.mk home
+    return homePath / (String.drop path 1).toString
+  else
+    return System.FilePath.mk path
 
 def printStartupLogo (model : String) : IO Unit := do
   let clearSeq := "\x1b[2J\x1b[H"
@@ -112,9 +130,9 @@ def run (args : List String) : IO Unit := do
     let initialState : InterpreterState := {
       history := [Message.mkText .system fullSystemPrompt],
       vectorDb := initialDb,
+      vlogState := [], -- Add missing field
       embeddingModel := embModel,
       sessionId := runArgs.session.getD "current",
-      approvalMode := runArgs.approvalMode,
       interactive := runArgs.prompt.isNone && runArgs.query.isEmpty,
       executionMode := if runArgs.prompt.isSome || !runArgs.query.isEmpty then .Batch else .Interactive,
       configDir := currentConfigDir,
@@ -136,23 +154,13 @@ def run (args : List String) : IO Unit := do
       taskCounter := 0
     }
 
-    if let some input := initialInput then
-        let parts ← injectFileParts input
-        let (action, nextS) := transition initialState parts
-        let _ ← stepAction 1000 config initialState action nextS
-        pure ()
-    else
-        printStartupLogo selectedModelName
-        runLoop 1000 config initialState dispatcher
+    let finalState := match initialInput with
+      | some input => 
+          { initialState with history := initialState.history ++ [Message.mkText .user input] }
+      | none => initialState
+
+    printStartupLogo selectedModelName
+    runLoop 1000 config finalState dispatcher
   | _ => TerminalEnv.println "Subcommand not fully integrated."
-
-private def getConfigPath : IO System.FilePath := do
-  let localConfig := System.FilePath.mk "config.toml"
-  if ← localConfig.pathExists then return localConfig
-  let home ← Pakila.Plugins.FFI.getHomeDirectoryNative ()
-  return System.FilePath.mk home / ".config" / "pakila" / "config.toml"
-
-end Pakila.CLI.App
-l" | none => localConfig
 
 end Pakila.CLI.App

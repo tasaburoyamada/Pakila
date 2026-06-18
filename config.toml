@@ -1,4 +1,4 @@
-llmModel = "models/gemini-2.5-flash"
+llmModel = "local-leantensor-gemma-4b"
 llmApiUrl = ""
 
 systemPrompt = """あなたはエンジニアを強力に支援するエキスパートAIです。

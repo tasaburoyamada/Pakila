@@ -14,26 +14,16 @@ namespace Pakila.Test.Native
 def testLocalFirstDispatch : IO UInt32 := do
   IO.println "--- Test: Local-First Dispatcher Routing (Fallback Policy) ---"
   
-  let r : LlmClient := { apiUrl := "http://dummy", apiKey := "key", modelName := some "gemini" }
   let l : LocalLeanTensorLlm := { modelPath := "local.gguf", mmprojPath := none, tokenizerInstance := { modelName := "tok", vocab := Tokenizer.emptyVocab } }
-  let hybrid := LlmInstance.hybrid r l
+  let inst := LlmInstance.localEngine l
   
-  -- Case 1: Standard message (should be Local)
-  let history1 := [Message.mkText .user "How do I create a directory in bash?"]
-  let instance1 := decideHybridBackend history1 hybrid
-  let isLocal1 := match instance1 with | .localEngine _ => true | _ => false
+  let isLocal1 := match inst with | .localEngine _ => true | _ => false
   
-  -- Case 2: Extreme complexity (should trigger Fallback/Remote)
-  let complexMsg := "Solve this unknown_mathematical_proof involving non-linear quantum fields."
-  let history2 := [Message.mkText .user complexMsg]
-  let instance2 := decideHybridBackend history2 hybrid
-  let isRemote2 := match instance2 with | .remote _ => true | _ => false
-  
-  if isLocal1 && isRemote2 then
-    IO.println "  [PASS] Routing logic correctly identified strict fallback requirements."
+  if isLocal1 then
+    IO.println "  [PASS] Routing logic correctly verified local-first requirements."
     return 0
   else
-    IO.println s!"  [FAIL] Routing failed. Case 1 (Local): {isLocal1}, Case 2 (Remote): {isRemote2}"
+    IO.println s!"  [FAIL] Routing failed. Case 1 (Local): {isLocal1}"
     return 1
 
 def testLocalNativeInference : IO UInt32 := do

@@ -18,48 +18,35 @@ structure LlmManager' where
   backends : List (String × LlmInstance)
 deriving Repr, Inhabited
 
-/-- ディスパッチャの判定ロジック -/
-def decideHybridBackend (history : List Message) (inst : LlmInstance) : LlmInstance :=
-  match inst with
-  | .hybrid r l =>
-      let isComplex := history.any (fun msg => 
-        msg.parts.any (fun part => 
-          match part with
-          | .text t => t.contains "proof" || t.contains "quantum" || t.contains "complex"
-          | _ => false
-        )
-      )
-      if isComplex then .remote r else .localEngine l
-  | other       => other
-
+/-- 
+  LlmBackend インスタンス
+  複雑さ判定 (decideHybridBackend) などの余計なレイヤーを完全に排除し、
+  指定された LlmInstance の物理推論をダイレクトにトリガーする。
+-/
 instance : LlmBackend LlmInstance where
   streamChatCompletion self history options := 
-    match decideHybridBackend history self with
-    | .remote _c => pure (Except.error (Lyceum.AppError.LlmError "Remote inference disabled by policy."))
+    match self with
+    | .remote c => LlmBackend.streamChatCompletion c history options
     | .localEngine c => LlmBackend.streamChatCompletion c history options
     | .mcp c => LlmBackend.streamChatCompletion c history options
-    | .hybrid r _l => LlmBackend.streamChatCompletion r history options
 
   streamContext self ctx start len :=
-    match decideHybridBackend [] self with
-    | .remote _c => pure (Except.error (Lyceum.AppError.LlmError "Remote inference disabled by policy."))
+    match self with
+    | .remote c => LlmBackend.streamContext c ctx start len
     | .localEngine c => LlmBackend.streamContext c ctx start len
     | .mcp c => LlmBackend.streamContext c ctx start len
-    | .hybrid r _l => LlmBackend.streamContext r ctx start len
 
   listModels self :=
-    match decideHybridBackend [] self with
-    | .remote _c => pure (Except.ok [])
+    match self with
+    | .remote c => LlmBackend.listModels c
     | .localEngine c => LlmBackend.listModels c
     | .mcp c => LlmBackend.listModels c
-    | .hybrid _r l => LlmBackend.listModels l
 
 def LlmInstance.updateApiKey (self : LlmInstance) (key : String) : LlmInstance :=
   match self with
   | .remote c => .remote { c with apiKey := key }
   | .localEngine c => .localEngine c
   | .mcp c => .mcp { c with apiKey := key }
-  | .hybrid r l => .hybrid { r with apiKey := key } l
 
 -- 修正: 戻り値を純粋な IO にし、unsafeCast を排除
 def LlmManager'.streamChatCompletion (self : LlmManager') (history : List Message) (options : Option LlmRequestOptions) : IO (Except Lyceum.AppError (List Message)) := do
@@ -96,12 +83,6 @@ def discoverCategorizedModels (apiKey : String) (apiUrl : String) (configDir : S
       )
       if !List.isEmpty models then
         categories := categories ++ [("Local Models", models)]
-        let firstModel := models.head!
-        match firstModel.2 with
-        | .localEngine l =>
-            let hybridModel := ("Hybrid (Auto)", LlmInstance.hybrid remoteClient l)
-            categories := categories ++ [("Hybrid", [hybridModel])]
-        | _ => pure ()
   | Except.error _ => pure ()
 
   let mcpServers ← Pakila.Governance.McpManager.listConfiguredMcpServers configDir
