@@ -76,12 +76,12 @@ instance : ExecutionEngine SandboxEngine where
       Except.error (Lyceum.AppError.ExecutionError s!"Unsupported language '{lang}'")
     else
       match self.level with
-      | .Low    => .ok (.Bash cmd)
-      | .Medium => .ok (.Docker cmd)
-      | .High   => .ok (.Wasm self.wasmModule "main")
+      | .Low    => .ok (Lyceum.ExecutionAction.Bash cmd)
+      | .Medium => .ok (Lyceum.ExecutionAction.Docker cmd)
+      | .High   => .ok (Lyceum.ExecutionAction.Wasm self.wasmModule "main")
 
 /-- 物理的なサンドボックス実行ロジック (Native Operations) -/
-def executeSandbox (self : SandboxEngine) (action : ExecutionAction) : IO (Except AppError String) :=
+def executeSandbox (self : SandboxEngine) (action : Lyceum.ExecutionAction) : IO (Except AppError String) :=
   match action with
   | .Bash cmd => executeNativeLow self cmd
   | .Docker cmd => executeDocker self cmd
@@ -90,11 +90,11 @@ def executeSandbox (self : SandboxEngine) (action : ExecutionAction) : IO (Excep
       try return .ok (← nativeGrep pat (System.FilePath.mk (dir.getD ".")))
       catch e => return .error (.IoError s!"Grep failed: {e}")
   | .Read path => do
-      try return .ok (← TerminalEnv.readFile path)
+      try return .ok (← Lyceum.Core.TerminalEnv.readFile path)
       catch e => return .error (.IoError s!"Read failed: {e}")
   | .Write path content => do
-      try 
-        TerminalEnv.writeFile path content
+      try
+        Lyceum.Core.TerminalEnv.writeFile path content
         return .ok "Success"
       catch e => return .error (.IoError s!"Write failed: {e}")
   | .Glob pat dir => do

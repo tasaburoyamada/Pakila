@@ -1,8 +1,8 @@
 import Pakila
-import Pakila.Memory.VectorDB
-import Pakila.Memory.NativeEmbedding
+import Lyceum.Memory.VectorDB -- New import
+import Lyceum.Memory.NativeEmbedding -- New import
 import Pakila.Core.DigitalTwin
-import Pakila.Core.ContextLoader -- Add this import
+import Pakila.Core.ContextLoader
 import Pakila.CLI.RewindUI
 import Pakila.CLI.Prompts
 import Pakila.CLI.TerminalBase
@@ -11,37 +11,43 @@ import Pakila.Governance.SkillManager
 import Pakila.Governance.GitManager
 import Pakila.Config.Loader
 import Pakila.MainLoop
-import Pakila.Core.Environment
-import Pakila.Plugins.Dispatcher -- Dispatcher structure
-import Pakila.Core.Bash -- BashEngine
-import Pakila.Plugins.Sandbox -- SandboxEngine
-import Pakila.Core.ResourceManager -- ResourceManager
-import Pakila.Plugins.WasmLoader -- WasmPlugin
+import Pakila.Core.Environment -- Keep for BashEngine.cwd, but use Lyceum's TerminalEnv
+import Pakila.Plugins.Dispatcher
+import Pakila.Core.Bash
+import Pakila.Plugins.Sandbox
+import Pakila.Core.ResourceManager
+import Pakila.Plugins.WasmLoader
+import Lyceum.Core.Environment -- For TerminalEnv
 
 open Pakila
 open Lyceum
 open Lean hiding Message
-open Pakila.Core.DigitalTwin -- Add this open
-open Pakila.CLI.Prompts -- Add this open
+open Pakila.Core.DigitalTwin
+open Pakila.CLI.Prompts
+open Lyceum.Core.Environment -- Open to bring TerminalEnv into scope
+open Lyceum.Memory -- Open for VectorDB, NativeEmbedding, VectorEntry
+open Lyceum.Inference.Gemma.Embedding -- For Vector type
 
 namespace Pakila.CLI.App
 
-private def getConfigPath : IO System.FilePath := do
+private def getConfigPath [TerminalEnv IO] : IO System.FilePath := do
   let localConfig := System.FilePath.mk "config.toml"
   if ← localConfig.pathExists then return localConfig
-  let home ← Pakila.Plugins.FFI.getHomeDirectoryNative ()
+  let homeOption ← IO.getEnv "HOME"
+  let home := homeOption.getD "."
   let homePath := System.FilePath.mk home
   return homePath / ".config" / "pakila" / "config.toml"
 
 private def expandPath (path : String) : IO System.FilePath := do
   if path.startsWith "~" then
-    let home ← Pakila.Plugins.FFI.getHomeDirectoryNative ()
+    let homeOption ← IO.getEnv "HOME"
+    let home := homeOption.getD "."
     let homePath := System.FilePath.mk home
     return homePath / (String.drop path 1).toString
   else
     return System.FilePath.mk path
 
-def printStartupLogo (model : String) : IO Unit := do
+def printStartupLogo (model : String) [TerminalEnv IO] : IO Unit := do
   let clearSeq := "\x1b[2J\x1b[H"
   let logo := s!"
  \x1b[38;5;74m▝\x1b[38;5;110m▜\x1b[38;5;140m▄\x1b[38;5;139m \x1b[38;5;174m \x1b[39m   \x1b[1m\x1b[38;5;231mPakila CLI\x1b[22m\x1b[38;5;248m v0.43.0\x1b[39m
@@ -50,11 +56,12 @@ def printStartupLogo (model : String) : IO Unit := do
  \x1b[38;5;74m▝\x1b[38;5;110m▀\x1b[38;5;140m  \x1b[38;5;139m \x1b[38;5;174m \x1b[39m  \x1b[1m\x1b[38;5;231mActive Model:\x1b[22m {model}\x1b[38;5;248m /config\x1b[39m
 "
   TerminalEnv.print (clearSeq ++ logo ++ "\n")
-  let notice := renderNoticeBox "Welcome to Pakila! This environment is optimized for autonomous logic\nexecution and theorem verification. Type /help for more information."
+  let notice := Pakila.renderNoticeBox "Welcome to Pakila! This environment is optimized for autonomous logic\nexecution and theorem verification. Type /help for more information."
   TerminalEnv.println notice
 
 /-- CLI アプリケーションのメイン実行ロジック -/
-def run (args : List String) : IO Unit := do
+def run (args : List String) [TerminalEnv IO] : IO Unit := do
+
   let subcommand ← match parseCliArgs args with
     | Except.ok res => pure res
     | Except.error e => TerminalEnv.println s!"[CLI Error]: {repr e}"; return
@@ -118,12 +125,12 @@ def run (args : List String) : IO Unit := do
   match subcommand with
   | .run runArgs =>
     let dbPath := currentConfigDir / s!".pakila/sessions/{runArgs.session.getD "current"}/vector_db.json"
-    let initialDb ← match (← Pakila.Memory.VectorDB.load dbPath.toString) with | Except.ok db => pure db | Except.error e => pure ∅
+    let initialDb ← match (← Lyceum.Memory.VectorDB.load dbPath.toString) with | Except.ok db => pure db | Except.error e => pure ∅
 
     let mut embModel := none
     let bertPath ← expandPath (config.embeddingModelPath.getD "models/bert.gguf")
-    if ← bertPath.pathExists then
-      match (← Pakila.Memory.initNativeEmbedding bertPath.toString) with
+    if ← TerminalEnv.pathExists bertPath then -- Updated pathExists to TerminalEnv
+      match (← Lyceum.Memory.initNativeEmbedding bertPath.toString) with
       | Except.ok m => embModel := some m
       | Except.error _ => pure ()
 

@@ -40,7 +40,7 @@ structure StructuredLlmResponse where
   response : String
 deriving Repr, BEq, Inhabited, ToJson, FromJson
 
-/-- LLMの生応答を解析し、StructuredLlmResponse を抽出する -/
+/-- LLMからの生応答を解析し、StructuredLlmResponse を抽出する -/
 def parseStructuredLlmResponse (rawResponse : String) : StructuredLlmResponse := Id.run do
   let mut thought := ""
   let mut action : Option String := none
@@ -89,4 +89,33 @@ def parseStructuredLlmResponse (rawResponse : String) : StructuredLlmResponse :=
 
   return { thought := thought, action := action, response := response }
 
+/-- 指定された文字列にLLMからのエラーメッセージを示すパターンが含まれているかをチェックする -/
+def isLlmErrorMessage (s : String) : Bool :=
+  let sLower := s.toLower
+  sLower.contains "error" ||
+  sLower.contains "failed" ||
+  sLower.contains "unsupported" ||
+  sLower.contains "invalid" ||
+  sLower.contains "denied" ||
+  sLower.contains "cannot" ||
+  sLower.contains "fault" ||
+  sLower.contains "exception" ||
+  sLower.contains "bug" ||
+  sLower.contains "apologize" ||
+  sLower.contains "unavailable" ||
+  sLower.contains "could not" ||
+  sLower.contains "failed to" ||
+  sLower.contains "no such" ||
+  sLower.contains "not found" ||
+  sLower.contains "permission denied" ||
+  sLower.contains "connection refused" ||
+  sLower.contains "timeout"
+
+/-- StructuredLlmResponse のいずれかのフィールドにLLMからのエラーメッセージが含まれているかをチェックする -/
+def StructuredLlmResponse.hasLlmError (s : StructuredLlmResponse) : Bool :=
+  isLlmErrorMessage s.thought ||
+  (s.action.map isLlmErrorMessage).getD false ||
+  isLlmErrorMessage s.response
+
 end Pakila.Protocol
+

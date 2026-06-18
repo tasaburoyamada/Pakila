@@ -1,3 +1,4 @@
+import Pakila.Util.String
 import Pakila.Core.Interface
 import Pakila.Core.Environment
 import Lyceum.Types

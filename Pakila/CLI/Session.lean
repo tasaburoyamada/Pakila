@@ -1,3 +1,4 @@
+import Pakila.Util.String
 import Lean
 import Lyceum.Types
 import Lyceum.Inference

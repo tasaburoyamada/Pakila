@@ -1,14 +1,18 @@
 import Pakila.Core.Primitives
-import Pakila.Core.Interface
+import Lyceum.Core.Environment -- Now TerminalEnv comes from here
 import Lyceum.Inference
 import Lyceum.Inference.Gemini
 import Lyceum.Types
-import Pakila.Plugins.LocalLeanTensor
+import Lyceum.Inference.Gemma.Backend -- New import for LocalLeanTensorLlm
 import Pakila.Governance.McpManager
 import Pakila.Plugins.FFI
+import Lyceum.Tokenizer.Vocab
 
 open Lyceum
 open Pakila
+open Lyceum.Inference.Gemma.Backend -- Corrected typo
+open Lyceum.Tokenizer
+open Lyceum.Core.Environment -- Open new namespace for TerminalEnv
 
 namespace Pakila
 
@@ -60,7 +64,7 @@ def LlmManager'.listModels (self : LlmManager') : IO (Except Lyceum.AppError (Li
   | some (_, inst) => LlmBackend.listModels inst
   | none => return Except.error (Lyceum.AppError.LlmError s!"Active backend '{self.activeBackend}' not found.")
 
-def LlmManager'.setActiveBackend [Monad m] [TerminalEnv m] (self : LlmManager') (name : String) : m (Except Lyceum.AppError LlmManager') := do
+def LlmManager'.setActiveBackend [Monad m] [Lyceum.Core.TerminalEnv m] (self : LlmManager') (name : String) : m (Except Lyceum.AppError LlmManager') := do -- Updated TerminalEnv path
   if self.backends.any (fun (n, _) => n == name) then
     return Except.ok { self with activeBackend := name }
   else
@@ -70,8 +74,8 @@ def LlmManager'.setActiveBackend [Monad m] [TerminalEnv m] (self : LlmManager') 
 def discoverCategorizedModels (apiKey : String) (apiUrl : String) (configDir : System.FilePath) : IO (List (String × List (String × LlmInstance))) := do
   let mut categories : List (String × List (String × LlmInstance)) := []
   let remoteClient : LlmClient := { apiUrl := apiUrl, apiKey := apiKey, modelName := none }
-  let localClient : LocalLeanTensorLlm := { modelPath := "", mmprojPath := none, tokenizerInstance := { modelName := "", vocab := Tokenizer.emptyVocab } }
-
+  let localClient : LocalLeanTensorLlm := { modelPath := "", mmprojPath := none, tokenizerInstance := { modelName := "", vocab := Lyceum.Tokenizer.emptyVocab } } -- Updated tokenizerInstance
+  
   match (← LlmBackend.listModels localClient) with
   | Except.ok names =>
     if !List.isEmpty names then

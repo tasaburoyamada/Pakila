@@ -20,7 +20,7 @@ instance : ExecutionEngine BashEngine where
     if lang != "bash" then
       .error (AppError.ExecutionError "Unsupported language")
     else
-      .ok (.Bash cmd)
+      .ok (Lyceum.ExecutionAction.Bash cmd)
 
 /-- 実際の Bash 実行ロジック (Native FFI) -/
 def executeBash (self : BashEngine) (cmd : String) : IO (Except AppError String) := do

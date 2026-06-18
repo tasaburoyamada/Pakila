@@ -1,3 +1,4 @@
+import Pakila.Util.String
 import Lyceum.Types
 import Lyceum.Inference
 import Pakila.CLI.Renderer

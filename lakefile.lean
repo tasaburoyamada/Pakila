@@ -77,3 +77,4 @@ lean_exe «test_mainloop_gaps» where
 lean_exe «test_ui_interactive» where
   root := `test.UiInteractiveTest
   moreLinkArgs := #["-O3", "-L", "./deps/wasmtime/lib", "-lwasmtime", "-Wl,-rpath,$ORIGIN/../../../deps/wasmtime/lib"]
+

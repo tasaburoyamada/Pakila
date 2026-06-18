@@ -2,13 +2,13 @@ import Pakila.Core.Primitives -- For AppConfig, LlmManager (opaque types)
 import Pakila.Core.LlmManager -- For LlmInstance'
 import Pakila.Core.Types -- For SessionStatus, ExecutionMode
 import Pakila.Governance.Vlog -- For VlogNode
-import Pakila.Memory.VectorDB -- For VectorDB
+import Lyceum.Memory.VectorDB -- New import
 import Pakila.Plugins.Sandbox -- For IsolationLevel
-import Pakila.Memory.NativeEmbedding -- For NativeEmbeddingModel
+import Lyceum.Memory.NativeEmbedding -- New import
 
 open Lyceum
 open Pakila.Protocol
-open Pakila.Memory
+open Lyceum.Memory -- New open
 
 namespace Pakila
 
@@ -16,18 +16,18 @@ namespace Pakila
 structure InterpreterState where
   history : List Message
   vlogState : List VlogNode
-  vectorDb : VectorDB := ∅
+  vectorDb : Lyceum.Memory.VectorDB := ∅
   summary : Option Message := none
   turnCount : Nat := 0
   status : SessionStatus := .inProgress
   sessionId : String := "current"
   currentTopic : Option String := none
   policies : List String := []
-  worktree : Option String := none
+  worktree : Option String := none -- Corrected initial value
   skipTrust : Bool := false
   sandbox : Bool := false
   sandboxLevel : IsolationLevel := .Low
-  embeddingModel : Option NativeEmbeddingModel := none
+  embeddingModel : Option Lyceum.Memory.NativeEmbeddingModel := none
   interactive : Bool := true
   executionMode : ExecutionMode := .Interactive
   configDir : System.FilePath := "."

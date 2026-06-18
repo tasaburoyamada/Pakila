@@ -2,6 +2,7 @@ import Lyceum.Types
 import Lyceum.Inference
 import Pakila.Governance.Vlog
 import Std.Internal.Parsec
+import Pakila.Util.String
 
 open Lyceum
 open Std.Internal.Parsec

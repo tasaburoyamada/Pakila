@@ -47,7 +47,10 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
         match fromJson? (α := StructuredLlmResponse) json with
         | .ok structuredResponse =>
           Pakila.renderAiThinking structuredResponse.thought
-          if let some act := structuredResponse.action then
+          if structuredResponse.hasLlmError then
+            TerminalEnv.println (applyColor .red s!"[Error]: LLM generated an internal error message: {if structuredResponse.action.isSome then structuredResponse.action.get! else structuredResponse.response}")
+            runLoop (maxTurns - 1) config nextS dispatcher
+          else if let some act := structuredResponse.action then
             Pakila.renderAiAction act
             -- 実際にactをBashコマンドとして実行
             match ← Pakila.runAction (.ExecuteBash act) dispatcher s.activeLlm with

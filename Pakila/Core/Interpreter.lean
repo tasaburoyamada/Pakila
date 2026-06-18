@@ -1,21 +1,23 @@
 import Pakila.Core.Machine
 import Pakila.Core.State
 import Pakila.CLI.Terminal
-import Pakila.Protocol.Types
+import Lyceum.Protocol.Types -- New import
 import Pakila.Core.Bash
 import Pakila.Plugins.Sandbox
-import Pakila.Plugins.LocalLeanTensor
+import Lyceum.Inference.Gemma.Backend
 import Pakila.Core.Primitives
-import Pakila.Protocol.Types
 import Batteries.Lean.Json
+import Lyceum.Core.Environment
 
-open Pakila.Protocol
-open Lean.Json -- Add this line
+open Lyceum.Protocol -- New open statement
+open Pakila.Protocol -- Added open
+open Lean.Json
+open Lyceum.Core.Environment
 
 namespace Pakila
 
 /-- 物理アクションの実行層: バグはこの関数にのみ集約される -/
-def runAction (action : MachineAction) (dispatcher : Dispatcher) (activeLlm : LlmInstance) : IO (Except String String) := do
+def runAction (action : MachineAction) (dispatcher : Dispatcher) (activeLlm : LlmInstance) [TerminalEnv IO] : IO (Except String String) := do
   match action with
   | .Quit => pure (Except.ok "Quit")
   | .CallLlm msgs => do
