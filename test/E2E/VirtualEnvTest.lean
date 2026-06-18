@@ -1,9 +1,11 @@
 import Lyceum.Types
 import Lyceum.Inference
 import Pakila.CLI.AuthUI
-import Pakila.Core.Environment
+import Pakila.Core.Interface
 
 open Lyceum
+open Pakila.Core -- Pakila.Core への変更
+open Pakila
 
 --TEMP_MARKER--
 

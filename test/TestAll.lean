@@ -9,6 +9,7 @@ import test.Integration.PhysicalAuthTest
 import test.E2E.VirtualEnvTest
 import test.Base64Test
 import test.SysInfoTest
+import Pakila.Test.CliTest
 
 open ComprehensiveTests
 open Base64Test
@@ -19,6 +20,9 @@ open Pakila.Test.Native
 def main : IO UInt32 := do
   IO.println "=== Pakila 100% Pure Lean 4 Master Test Suite ==="
 
+  -- CLI E2E Tests
+  Pakila.Test.runAllTests
+  
   -- -1. Native Native Test
   let resN1 ← testNativeQ80DotProduct
   if resN1 != 0 then return resN1
