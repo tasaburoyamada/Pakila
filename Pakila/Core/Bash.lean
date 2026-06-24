@@ -2,14 +2,14 @@ import Pakila.Core.Interface
 import Pakila.Protocol.Types
 import Pakila.Core.Types
 import Lyceum.Inference
-import Lyceum.Types
+import Lyceum.Types -- Assuming ExecutionEngine is defined here
 import Pakila.Governance.PolicyEngine
 import Pakila.Plugins.Bash
 import Pakila.Plugins.Sandbox
 import Pakila.CLI.Theme
 import Pakila.CLI.Prompts
 
-open Lyceum
+open Lyceum -- Add this line to open Lyceum namespace
 open Pakila
 open Pakila.Protocol
 open Pakila.Governance.PolicyEngine
@@ -19,6 +19,8 @@ open Pakila.CLI
 --TEMP_MARKER--
 
 namespace Pakila.Actions
+
+open MachineAction
 
 open MachineAction
 
