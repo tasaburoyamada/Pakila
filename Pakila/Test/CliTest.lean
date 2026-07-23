@@ -33,7 +33,8 @@ def testCases : List TestCase := [
           | some c => if c.cmd.name != i.drop 1 then return false
         return true },
     { name := "TEST_E2E_009: Invalid Slash Command", run := do
-        return (parseSlashCommand "/foobar" == none) },
+        return (parseSlashCommand "/foobar").isNone },
+
     { name := "TEST_E2E_010: Model Command Args", run := do
         match parseSlashCommand "/model gemma-4b" with
         | some c => return (c.args == ["gemma-4b"])

@@ -1,10 +1,10 @@
-import Pakila.Core.Primitives -- For AppConfig, LlmManager (opaque types)
-import Pakila.Core.LlmManager -- For LlmInstance'
-import Pakila.Core.Types -- For SessionStatus, ExecutionMode
-import Pakila.Governance.Vlog -- For VlogNode
+import Pakila.Core.Primitives
+import Pakila.Core.Types
+import Pakila.Protocol.Types
+import Pakila.Governance.Vlog
+ -- For VlogNode
 import Lyceum.Memory.VectorDB -- New import
 import Pakila.Plugins.Sandbox -- For IsolationLevel
-import Lyceum.Memory.NativeEmbedding -- New import
 
 open Lyceum
 open Pakila.Protocol
@@ -27,14 +27,17 @@ structure InterpreterState where
   skipTrust : Bool := false
   sandbox : Bool := false
   sandboxLevel : IsolationLevel := .Low
-  embeddingModel : Option Lyceum.Memory.NativeEmbeddingModel := none
+  embeddingModel : Option String := none
+
   interactive : Bool := true
   executionMode : ExecutionMode := .Interactive
   configDir : System.FilePath := "."
   selfHealingCount : Nat := 0
-  activeLlm : LlmInstance
-  activeModelName : String
-deriving Inhabited
+  activeLlm : LlmInstance := .remote default
+  activeModelName : String := "gemma-4b"
+deriving Inhabited, BEq
+
+
 
 
 /-- 実行結果を受け取り、次のループへ遷移する継続インターフェース -/

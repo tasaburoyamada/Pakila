@@ -16,13 +16,9 @@ open Pakila
 
 def testSummarizationLoop : IO UInt32 := do
   IO.println "[Test][L4] Long-Term Summarization Stability..."
-  -- Align with new LocalLeanTensorLlm structure
-  let localLlm : Inference.Gemma.Backend.LocalLeanTensorLlm := { 
-    modelPath := "mock-model",
-    mmprojPath := none,
-    tokenizerInstance := { modelName := "mock-tokenizer", vocab := Tokenizer.emptyVocab } 
-  }
-  let llm : LlmInstance := .localEngine localLlm
+  let client : LlmClient := { apiUrl := "", apiKey := "", modelName := some "mock-model" }
+  let llm : LlmInstance := .remote client
+
 
   let longHistory := List.replicate 51 (Message.mkText .user "Spam")
   let initialState : InterpreterState := { history := longHistory, vlogState := [], activeLlm := llm, activeModelName := "mock-model" }

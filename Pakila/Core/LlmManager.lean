@@ -3,16 +3,15 @@ import Lyceum.Core.Environment -- Now TerminalEnv comes from here
 import Lyceum.Inference
 import Lyceum.Inference.Gemini
 import Lyceum.Types
-import Lyceum.Inference.Gemma.Backend -- New import for LocalLeanTensorLlm
 import Pakila.Governance.McpManager
 import Pakila.Plugins.FFI
 import Lyceum.Tokenizer.Vocab
 
 open Lyceum
 open Pakila
-open Lyceum.Inference.Gemma.Backend -- Corrected typo
 open Lyceum.Tokenizer
-open Lyceum.Core.Environment -- Open new namespace for TerminalEnv
+open Lyceum.Core.Environment
+ -- Open new namespace for TerminalEnv
 
 namespace Pakila
 
@@ -74,19 +73,19 @@ def LlmManager'.setActiveBackend [Monad m] [Lyceum.Core.TerminalEnv m] (self : L
 def discoverCategorizedModels (apiKey : String) (apiUrl : String) (configDir : System.FilePath) : IO (List (String × List (String × LlmInstance))) := do
   let mut categories : List (String × List (String × LlmInstance)) := []
   let remoteClient : LlmClient := { apiUrl := apiUrl, apiKey := apiKey, modelName := none }
-  let localClient : LocalLeanTensorLlm := { modelPath := "", mmprojPath := none, tokenizerInstance := { modelName := "", vocab := Lyceum.Tokenizer.emptyVocab } } -- Updated tokenizerInstance
+  let localClient : LlmClient := { apiUrl := "", apiKey := "", modelName := none }
   
   match (← LlmBackend.listModels localClient) with
   | Except.ok names =>
     if !List.isEmpty names then
       let home ← IO.getEnv "HOME"
       let modelsDir := System.FilePath.mk (home.getD "." ++ "/models")
-      let mmprojPath := names.find? (fun n => n.contains "mmproj") |>.map (fun n => (modelsDir / n).toString)
       let models : List (String × LlmInstance) := names.filter (fun n => !n.contains "mmproj") |>.map (fun n => 
-        (n, LlmInstance.localEngine { localClient with modelPath := (modelsDir / n).toString, mmprojPath := mmprojPath })
+        (n, LlmInstance.localEngine { localClient with modelName := some (modelsDir / n).toString })
       )
       if !List.isEmpty models then
         categories := categories ++ [("Local Models", models)]
+
   | Except.error _ => pure ()
 
   let mcpServers ← Pakila.Governance.McpManager.listConfiguredMcpServers configDir

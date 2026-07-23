@@ -40,4 +40,5 @@ def vlogNodeToTokens (node : VlogNode) : String :=
 /-- VLOG 全体をファイルへ書き込む -/
 def writeVlog (path : System.FilePath) (nodes : List VlogNode) : IO Unit := do
   let content := nodes.foldl (fun acc n => acc ++ vlogNodeToTokens n) ""
-  TerminalEnv.writeFile path (content ++ "@EOF\n")
+  IO.FS.writeFile path (content ++ "@EOF\n")
+

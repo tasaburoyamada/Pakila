@@ -1,6 +1,8 @@
+import Lbir
 import Lyceum.Inference
 import Lyceum.Inference.Gemini
 import Lyceum.Types
+
 import Lyceum.Inference
 import Pakila.CLI.ArgParser
 import Pakila.CLI.Args
@@ -18,8 +20,8 @@ import Pakila.Core.Wasm
 import Pakila.Core.ContextLoader
 import Pakila.Core.Environment
 import Pakila.Core.FileInjector
-import Pakila.Core.LlmManager
 import Pakila.Core.Machine
+
 import Pakila.Core.Monad
 import Pakila.Core.Persistence
 import Pakila.Core.PromptManager

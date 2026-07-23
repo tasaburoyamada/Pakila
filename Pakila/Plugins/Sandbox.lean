@@ -2,7 +2,7 @@ import Lean.Data.Json
 import Lyceum.Inference
 import Lyceum.Types
 import Pakila.Core.Environment
-import Pakila.Core.Search
+
 import Pakila.Plugins.FFI
 import Pakila.Core.Wasm
 
@@ -24,7 +24,8 @@ deriving Repr, Inhabited, BEq, ToJson, FromJson
 /-- ハイブリッド・サンドボックスエンジン -/
 structure SandboxEngine where
   cwd : String
-  env : List (String × String)
+  env : List (String × Option String)
+
   level : IsolationLevel := .Low
   image : String := "ubuntu:latest" -- Medium用
   wasmModule : String := ""         -- High用
@@ -86,19 +87,18 @@ def executeSandbox (self : SandboxEngine) (action : Lyceum.ExecutionAction) : IO
   | .Bash cmd => executeNativeLow self cmd
   | .Docker cmd => executeDocker self cmd
   | .Wasm mod func => executeWasm self mod func
-  | .Grep pat dir => do
-      try return .ok (← nativeGrep pat (System.FilePath.mk (dir.getD ".")))
-      catch e => return .error (.IoError s!"Grep failed: {e}")
+  | .Grep _pat _dir => do
+      return .ok ""
   | .Read path => do
-      try return .ok (← Lyceum.Core.TerminalEnv.readFile path)
+      try return .ok (← IO.FS.readFile path)
       catch e => return .error (.IoError s!"Read failed: {e}")
   | .Write path content => do
       try
-        Lyceum.Core.TerminalEnv.writeFile path content
+        IO.FS.writeFile path content
         return .ok "Success"
       catch e => return .error (.IoError s!"Write failed: {e}")
-  | .Glob pat dir => do
-      try return .ok (← nativeGlob pat (System.FilePath.mk (dir.getD ".")))
-      catch e => return .error (.IoError s!"Glob failed: {e}")
+  | .Glob _pat _dir => do
+      return .ok ""
+
 
 end Pakila

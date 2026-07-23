@@ -1,8 +1,9 @@
 import Lean.Data.Json
+import Lyceum.Types
+import Lyceum.Inference
 import Pakila.Core.Interface
-import Pakila.Core.Primitives -- AppError, AppConfig, LlmInstance, LlmManager
-import Lyceum.Types -- Message needs this
-import Lyceum.Inference -- AppError needs this
+import Pakila.Core.Primitives
+
 
 namespace Pakila
 

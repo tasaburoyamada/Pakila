@@ -2,8 +2,8 @@ import Lean.Data.Json
 import Lyceum.Inference
 import Lyceum.Types
 import Lyceum.Inference
-import Pakila.Core.LlmManager
 import Pakila.Core.State
+
 
 open Lyceum
 

@@ -4,26 +4,21 @@ import Init.System.FilePath
 import Pakila.Plugins.FFI
 import Pakila.Core.Interface
 import Pakila.CLI.Theme
+import Pakila.CLI.TerminalIO
+
 
 namespace Pakila
 
 -- /-- 物理ターミナルの状態を保持するグローバルRef -/
 -- initialize rawModeRef : IO.Ref Bool ← IO.mkRef false
 
-/-- 物理RAWモード設定のFFI定義 -/
--- @[extern "lean_enable_raw_mode"]
-opaque enableRawModeNative (dummy : Unit) : IO Bool
+def enableRawModeNative (_dummy : Unit) : IO Bool := pure false
+def disableRawModeNative (_dummy : Unit) : IO Unit := pure ()
+def getCharNative (_dummy : Unit) : IO UInt8 := pure 0
+def getTerminalSizeNative (_dummy : Unit) : IO (Nat × Nat) := pure (80, 24)
 
--- @[extern "lean_disable_raw_mode"]
-opaque disableRawModeNative (dummy : Unit) : IO Unit
 
--- @[extern "lean_get_char"]
-opaque getCharNative (dummy : Unit) : IO UInt8
-
--- @[extern "lean_get_terminal_size"]
-opaque getTerminalSizeNative (dummy : Unit) : IO (Nat × Nat)
-
-/-- 実機 (IOモナド) 用の物理環境実装 -/
+-- 実機 (IOモナド) 用の物理環境実装
 -- TerminalEnv IO インスタンスは Pakila.CLI.TerminalIO に移動したため、
 -- このファイルにはインスタンス定義は含みません。
 

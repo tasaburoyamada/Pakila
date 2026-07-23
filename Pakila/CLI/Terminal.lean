@@ -5,8 +5,8 @@ import Pakila.CLI.Theme
 import Pakila.CLI.SlashCommands
 --import Pakila.CLI.TerminalBase -- 削除 (TerminalIOに移動)
 import Pakila.Core.Environment
-import Pakila.Core.LlmManager
 import Pakila.Plugins.FFI
+
 import Pakila.CLI.TerminalIO -- TerminalEnv IO インスタンスをインポート
 
 open Lyceum
@@ -28,16 +28,9 @@ def readLineWithHistory {m : Type → Type} [Monad m] [TerminalEnv m] [MonadFina
   -- プロンプトを表示
   TerminalEnv.print prompt
 
-  -- RAWモードの有効化を試みず、常にフォールバックパスに入るようにする。
-  let res ← do
-    let line ← TerminalEnv.readLine
-    -- 履歴に追記
-    match line with
-    | some l ->
-        if !l.trimAscii.toString.isEmpty then
-          appendHistory configDir l
-    | none => pure ()
-    return line
+  let line ← TerminalEnv.readLine
+  if !line.trimAscii.toString.isEmpty then
+    appendHistory configDir line
+  return line
 
-  -- 読み取った行を返す
-  return res
+

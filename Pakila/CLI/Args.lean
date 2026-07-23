@@ -35,7 +35,7 @@ structure RunArgs where
   outputFormat : OutputFormat := .text
   policies : List String := []
   skipTrust : Bool := false
-deriving Repr, Inhabited
+deriving Repr, BEq, Inhabited
 
 inductive Subcommand where
   | run (args : RunArgs)
@@ -49,7 +49,7 @@ inductive Subcommand where
   | listExtensions
   | help
   | version
-deriving Repr, Inhabited
+deriving Repr, BEq, Inhabited
 
 structure Args where
   model : Option String := none
@@ -65,6 +65,6 @@ structure Args where
   outputFormat : OutputFormat := .text
   skipTrust : Bool := false
   systemPrompt : Option String := none
-deriving Repr, Inhabited
+deriving Repr, BEq, Inhabited
 
 end Pakila

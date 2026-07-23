@@ -1,9 +1,10 @@
 import Lean.Data.Json
-import Lyceum.Memory.VectorDB -- New import
-import Lyceum.Inference.Gemma.Embedding -- For Vector type
+import Lyceum.Memory.VectorDB
+import Pakila.Memory.Embedding
 
-open Lyceum.Memory -- For VectorDB, VectorEntry
-open Lyceum.Inference.Gemma.Embedding -- For Vector type
+open Lyceum.Memory
+open Pakila.Memory
+
 
 namespace Pakila.Core.Memory
 
@@ -12,10 +13,11 @@ structure MemoryBridge where
   db : Lyceum.Memory.VectorDB
 
 /-- 文字列クエリをベクトルへ変換するモック変換関数 (本来は Embedding モデルを呼び出す) -/
-def encodeQuery (query : String) : Lyceum.Inference.Gemma.Embedding.Vector :=
-  -- 文字列の長さをベクトル表現とする単純なハッシュ
+def encodeQuery (query : String) : Lyceum.Memory.Vector :=
   let data := #[query.length.toFloat]
   { data := data }
+
+
 
 /-- メモリ検索を実行 -/
 def queryMemory (bridge : MemoryBridge) (query : String) (topK : Nat) : IO String := do

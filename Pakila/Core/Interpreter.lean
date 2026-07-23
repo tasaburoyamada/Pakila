@@ -4,8 +4,9 @@ import Pakila.CLI.Terminal
 import Lyceum.Protocol.Types -- New import
 import Pakila.Core.Bash
 import Pakila.Plugins.Sandbox
-import Lyceum.Inference.Gemma.Backend
+import Lyceum.Inference
 import Pakila.Core.Primitives
+
 import Batteries.Lean.Json
 import Lyceum.Core.Environment
 
