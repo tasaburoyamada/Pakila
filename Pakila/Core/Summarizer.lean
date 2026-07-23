@@ -3,6 +3,9 @@ import Lyceum.Inference
 import Lyceum.Types
 import Lyceum.Inference
 import Pakila.Core.State
+import Pakila.Core.Interface
+import Pakila.CLI.Theme
+
 
 
 open Lyceum
@@ -28,6 +31,10 @@ LLM を用いて、これまでの経緯を簡潔な Message に変換する。
 def summarizeHistory (client : LlmInstance) (history : List Message) : IO (Except AppError Message) := do
   if history.length < 5 then 
     return Except.ok (history.getLastD (Message.mkText .system "No history"))
+  
+  TerminalEnv.print (applyColor ProfessionalColors.gray s!"[Context Standardizer: {history.length} turns -> Compacted]\n")
+
+
   
   let prompt := "Please summarize the following development conversation history into a concise strategic summary. Focus on completed tasks and current goals. Use high-density symbolic language where appropriate."
   let historyText := String.intercalate "\n" (history.map (fun msg => 
