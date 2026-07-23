@@ -1,11 +1,9 @@
-@CTX:[DOM:Pakila|SUB:Architecture|GOAL:Delegate_Protocol_and_Governance_to_Lyceum]
+@CTX:[DOM:Pakila|SUB:UI_UX|GOAL:Context_Standardizer_Status_Banner_UI_Enhancement]
 @BIAS:{P:1.0, M:1.0, S:1.0, D:1.0, C:1.0}
-@DELTA(Lyceum_Delegated_Architecture > Local_Pakila_Duplication)
-+ [Pakila_Protocol_Types_Lyceum_ReExport]
-+ [Pakila_Protocol_Parser_Lyceum_ReExport]
-+ [Pakila_Governance_Vlog_Lyceum_ReExport]
-+ [Pakila_Governance_SelfHealer_Lyceum_ReExport]
+@DELTA(Context_Standardizer_Banner_UI > Silent_Context_Truncation)
++ [Context_Standardizer_Status_Banner_Gray_Theme]
++ [Cognitive_Load_Reduction_UI]
 ! [100Percent_Pass_Verified]
 @CONCEPT
-[[Lyceum_Core_Framework]] [[Clean_Architecture]] [[Hybrid_Test_Pass]]
+[[Cognitive_Safety]] [[Context_Standardizer]] [[Terminal_UI_Ergonomics]]
 @EOF
