@@ -7,8 +7,9 @@ import Lyceum.Types
 
 open LeanTensor
 open Lib.Gguf
-open Lib.NN
+open LeanTensor.NN
 open Lyceum
+
 
 namespace Pakila.Memory
 

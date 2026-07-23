@@ -42,7 +42,7 @@ instance : TerminalEnv IO where
       let _ ← IO.Process.run { cmd := cmd, args := #[url] }
       return true
       -- IO.Process.run は例外を投げるため、catch でエラーを捕捉
-    catch _ -> 
+    catch _ => 
       IO.println s!"[Environment] Browser failed. Please open manually: {url}"
       return false
 
@@ -53,8 +53,7 @@ instance : TerminalEnv IO where
     if !(← historyPath.pathExists) then
       return []
     let content ← IO.FS.readFile historyPath
-    return content.splitOn "
-" |>.filter (!·.isEmpty)
+    return content.splitOn "\n" |>.filter (!·.isEmpty)
 
   appendHistory path line := do
     if line.trimAscii.toString.isEmpty then return
@@ -66,7 +65,7 @@ instance : TerminalEnv IO where
   readFile path := IO.FS.readFile path
   readBinFile path := IO.FS.readBinFile path
   writeFile path content := IO.FS.writeFile path content
-  createDirAll path := IO.FS.createAll path
+  createDirAll path := IO.FS.createDirAll path
   rename old new := IO.FS.rename old new
   removeFile path := IO.FS.removeFile path
   pathExists path := path.pathExists
@@ -82,6 +81,7 @@ instance : TerminalEnv IO where
       return .ok (unsafeCast child)
     catch e =>
       return .error (s!"Process spawn failed: {e}")
+
   getEnv var := IO.getEnv var
   getCurrentDir := IO.currentDir
   runProcess args := do

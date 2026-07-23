@@ -1,1 +1,8 @@
 /.lake
+/*.o
+/*.o.hash
+/*.o.trace
+/local.gguf
+/pakila_history
+/tmp_loop.txt
+/cyclic_deps.log
