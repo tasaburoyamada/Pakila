@@ -1,0 +1,6 @@
+@CONCEPT: Pakila Master Orchestrator Application Environment
+@SHIFT: DOCUMENTATION_CONSOLIDATED_AND_STANDARDIZED
+@STATE: SPECIFICATION_COMPLETE (Phase 1.8)
+
+[LOG_HISTORY]
+- 2026-07-23T15:51:23+09:00: Consolidated all scattered root documentation files into doc/archive/. Established C4 L1~L4 architecture specification and ADRs in doc/Pakila_システムアーキテクチャ設計書.md.
