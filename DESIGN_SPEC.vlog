@@ -1,7 +1,11 @@
-@CONCEPT: Pakila Master Orchestrator Application Environment
-@SHIFT: DOCUMENTATION_CONSOLIDATED_AND_BUILD_TARGETS_STREAMLINED
-@STATE: SPECIFICATION_COMPLETE (Phase 1.8)
-
-[LOG_HISTORY]
-- 2026-07-23T15:57:42+09:00: Consolidated all scattered root documentation files into doc/archive/. Established C4 L1~L4 architecture specification and ADRs. Streamlined 11+ test targets in lakefile.lean and standardized dependency paths. Cleaned up root build artifacts.
-
+@CTX:[DOM:Pakila|SUB:Testing_and_Lbir|GOAL:Lbir_Symbol32_Integration_and_3Phase_Hybrid_Verification]
+@BIAS:{P:1.0, M:1.0, S:1.0, D:1.0, C:1.0}
+@DELTA(Option1_Full_Lbir_Hybrid_TestSuite > Legacy_Test_Targets)
++ [Lbir_Symbol32_Core_Integration]
++ [Phase1_Nomos_Blackbox_Trace_Verification]
++ [Phase2_Boundary_Resilience_and_LongTerm_State]
++ [Phase3_Physical_Binary_Stdio_Pipeline_Execution]
+! [100Percent_Pass_Verified]
+@CONCEPT
+[[Nomos_Contract]] [[Blackbox_Testing]] [[Physical_Binary_Testing]] [[Lbir]] [[Symbol32]]
+@EOF
