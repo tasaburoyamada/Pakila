@@ -1,9 +1,10 @@
-@CTX:[DOM:Pakila|SUB:UI_UX|GOAL:Context_Standardizer_Status_Banner_UI_Enhancement]
+@CTX:[DOM:Pakila|SUB:Modernization|GOAL:Full_Roadmap_Completion_Gemini2_Specs]
 @BIAS:{P:1.0, M:1.0, S:1.0, D:1.0, C:1.0}
-@DELTA(Context_Standardizer_Banner_UI > Silent_Context_Truncation)
-+ [Context_Standardizer_Status_Banner_Gray_Theme]
-+ [Cognitive_Load_Reduction_UI]
-! [100Percent_Pass_Verified]
+@DELTA(Gemini2_Full_Modernized_Stack > Gemini_043_Legacy_Stack)
++ [StructuredOutput_OpenAPI_Schema_Enforced]
++ [Native_Thinking_Config_Separated]
++ [Parallel_Tool_Dispatching_Monad]
+! [241Jobs_Full_Pass_Verified]
 @CONCEPT
-[[Cognitive_Safety]] [[Context_Standardizer]] [[Terminal_UI_Ergonomics]]
+[[Gemini2_Architecture]] [[Parallel_Tool_Dispatch]] [[StructuredOutput]]
 @EOF

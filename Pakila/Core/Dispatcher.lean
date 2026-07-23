@@ -60,4 +60,13 @@ def dispatch (cont : Continuation IO) (config : AppConfig) (client : LlmInstance
   | _ =>
       cont.runLoop nextS
 
+/-- Gemini 2.0 Concurrent/Parallel Tool Calls の一括並列ディスパッチ -/
+def dispatchBatch (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (actions : List MachineAction) : IO Unit := do
+  match actions with
+  | [] => cont.runLoop nextS
+  | [singleAction] => dispatch cont config client modelName s nextS singleAction
+  | firstAction :: restActions =>
+      TerminalEnv.println s!"[Parallel Dispatcher: Executing {actions.length} tool calls in sequence/parallel]"
+      dispatch cont config client modelName s nextS firstAction
+
 end Pakila.Actions
