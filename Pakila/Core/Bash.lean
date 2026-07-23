@@ -18,15 +18,14 @@ open Pakila.CLI
 --TEMP_MARKER--
 --TEMP_MARKER--
 
+open Lyceum.Protocol
+
 namespace Pakila.Actions
-
-open MachineAction
-
-open MachineAction
 
 /-- Bash アクションを処理する -/
 def handleBash (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (cmd : String) : IO Unit := do
-  match enforcePolicies s (ExecuteBash cmd) with
+  match enforcePolicies s (MachineAction.ExecuteBash cmd) with
+
   | Except.error e =>
       TerminalEnv.println (applyColor .red s!"✖  Policy Violation: {repr e}")
       cont.runLoop nextS

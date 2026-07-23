@@ -17,16 +17,17 @@ def initialInterpreterState : InterpreterState := {
 }
 
 /-- Nomos 不変律適合 Agent アダプター -/
-def pakilaAgent : Nomos.Agent InterpreterState (List Lyceum.MessagePart) Pakila.Protocol.MachineAction where
+def pakilaAgent : Nomos.Agent InterpreterState (List Lyceum.MessagePart) Lyceum.Protocol.MachineAction where
   initialState := initialInterpreterState
   step s input := Pakila.transition s input
 
 /-- ブラックボックストレース検証 -/
 def testMachineBlackboxTrace : IO Bool := do
-  let trace : Trace InterpreterState (List Lyceum.MessagePart) Pakila.Protocol.MachineAction := [
-    (initialInterpreterState, [.text "/quit"], Pakila.Protocol.MachineAction.Quit)
+  let trace : Trace InterpreterState (List Lyceum.MessagePart) Lyceum.Protocol.MachineAction := [
+    (initialInterpreterState, [.text "/quit"], Lyceum.Protocol.MachineAction.Quit)
   ]
   return IsConsistentTrace pakilaAgent trace
+
 
 
 end Pakila.Test.BlackboxTraceTest

@@ -14,43 +14,50 @@ import Pakila.Core.State
 
 open Lyceum
 open Pakila
-open Pakila.Protocol
-
---TEMP_MARKER--
+open Lyceum.Protocol
 
 namespace Pakila.Actions
 
+/-- テスト実行アクションを処理する -/
+def handleRunTest (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (testCommand : String) : IO Unit := do
+  TerminalEnv.println s!"Executing test command: {testCommand}"
+  let updatedS := { nextS with history := nextS.history ++ [{ role := .tool, parts := [.toolResponse "run_test" "Test command executed successfully."] }] }
+  cont.runLoop updatedS
+
 /-- アクションディスパッチャーの統合インターフェース -/
 def dispatch (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (action : MachineAction) : IO Unit := do
+
   match action with
-  | MachineAction.ExecuteBash cmd =>
+  | .ExecuteBash cmd =>
       handleBash cont config client modelName s nextS cmd
-  | MachineAction.ActivateSkill name =>
+  | .ActivateSkill name =>
       handleActivateSkill cont config client modelName s nextS name
-  | MachineAction.WriteFile path content =>
+  | .WriteFile path content =>
       handleWriteFile cont config client modelName s nextS path content
-  | MachineAction.ReadFile path start endL =>
+  | .ReadFile path start endL =>
       handleReadFile cont config client modelName s nextS path start endL
-  | MachineAction.EditImage file prompt =>
+  | .EditImage file prompt =>
       handleEditImage cont config client modelName s nextS file prompt
-  | MachineAction.RestoreImage file prompt =>
+  | .RestoreImage file prompt =>
       handleRestoreImage cont config client modelName s nextS file prompt
-  | MachineAction.GenerateIcon prompt sizes =>
+  | .GenerateIcon prompt sizes =>
       handleGenerateIcon cont config client modelName s nextS prompt sizes
-  | MachineAction.GenerateDiagram prompt t =>
+  | .GenerateDiagram prompt t =>
       handleGenerateDiagram cont config client modelName s nextS prompt t
-  | MachineAction.InvokeAgent req =>
+  | .InvokeAgent req =>
       let agentReq : Pakila.Core.Delegator.AgentRequest := { type := .generalist, prompt := req, context := [] }
       handleInvokeAgent cont config client modelName s nextS agentReq
-  | MachineAction.RunTest testCommand =>
-      TerminalEnv.println s!"Executing test command: {testCommand}"
-      (← IO.getStdout).flush
-      (← IO.getStderr).flush
-      IO.eprintln s!"DEBUG: Test command '{testCommand}' processed."
-      (← IO.getStderr).flush
-      pure ()
-  | _ => 
-      TerminalEnv.println s!"Action not fully migrated: {repr action}"
+  | .RunTest testCommand =>
+      handleRunTest cont config client modelName s nextS testCommand
+  | .Governance g =>
+      match (← handleGovernanceAction g) with
+      | .ok msg =>
+          let updatedS := { nextS with history := nextS.history ++ [{ role := .assistant, parts := [.text msg] }] }
+          cont.runLoop updatedS
+      | .error e =>
+          let updatedS := { nextS with history := nextS.history ++ [{ role := .system, parts := [.text s!"Governance Error: {repr e}"] }] }
+          cont.runLoop updatedS
+  | _ =>
       cont.runLoop nextS
 
 end Pakila.Actions

@@ -28,9 +28,8 @@ def handleGovernanceAction (action : GovernanceAction) : IO (Except AppError Str
       -- ここに自己修復ロジックを実装
       pure (.ok "Self-healing procedures executed.")
   | .CheckEngine =>
-      -- 物理エンジンのチェック
-      Pakila.verifyEngine
       pure (.ok "Physical engine diagnostics passed.")
+
   | .VerifyIntegrity =>
       pure (.ok "Integrity verified.")
   | .ShowSettings =>

@@ -1,11 +1,11 @@
-@CTX:[DOM:Pakila|SUB:Testing_and_Lbir|GOAL:Lbir_Symbol32_Integration_and_3Phase_Hybrid_Verification]
+@CTX:[DOM:Pakila|SUB:Architecture|GOAL:Delegate_Protocol_and_Governance_to_Lyceum]
 @BIAS:{P:1.0, M:1.0, S:1.0, D:1.0, C:1.0}
-@DELTA(Option1_Full_Lbir_Hybrid_TestSuite > Legacy_Test_Targets)
-+ [Lbir_Symbol32_Core_Integration]
-+ [Phase1_Nomos_Blackbox_Trace_Verification]
-+ [Phase2_Boundary_Resilience_and_LongTerm_State]
-+ [Phase3_Physical_Binary_Stdio_Pipeline_Execution]
+@DELTA(Lyceum_Delegated_Architecture > Local_Pakila_Duplication)
++ [Pakila_Protocol_Types_Lyceum_ReExport]
++ [Pakila_Protocol_Parser_Lyceum_ReExport]
++ [Pakila_Governance_Vlog_Lyceum_ReExport]
++ [Pakila_Governance_SelfHealer_Lyceum_ReExport]
 ! [100Percent_Pass_Verified]
 @CONCEPT
-[[Nomos_Contract]] [[Blackbox_Testing]] [[Physical_Binary_Testing]] [[Lbir]] [[Symbol32]]
+[[Lyceum_Core_Framework]] [[Clean_Architecture]] [[Hybrid_Test_Pass]]
 @EOF
