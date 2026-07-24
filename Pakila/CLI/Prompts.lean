@@ -1,8 +1,11 @@
 import Pakila.CLI.TerminalBase
+import Lyceum.Inference
+import Pakila.Core.Primitives
 
 namespace Pakila.CLI.Prompts
 
 open Pakila.CLI.TerminalBase
+open Pakila
 
 /-- ユーザーにYes/Noで問いかけ、真偽値を返す (汎用版) -/
 partial def yesNo {m : Type → Type} [Monad m] [TerminalEnv m] (prompt : String) : m Bool := do
@@ -23,4 +26,11 @@ def selectOption {m : Type → Type} [Monad m] [TerminalEnv m] (prompt : String)
   let indexedOptions := options.mapIdx (fun i o => (o, i))
   interactiveSelect prompt indexedOptions
 
+/-- フラット化されたモデルリストからインタラクティブにモデルを選択する -/
+def selectModelFlat {m : Type → Type} [Monad m] [TerminalEnv m] (categories : List (String × List (String × LlmInstance))) : m (Option (String × LlmInstance)) := do
+  have : Inhabited (String × LlmInstance) := ⟨("", LlmInstance.remote { apiUrl := "", apiKey := "", modelName := none })⟩
+  let flatOptions := categories.flatMap (fun (cat, ms) => ms.map (fun (name, llm) => (s!"[{cat}] {name}", (name, llm))))
+  interactiveSelect "Select LLM Model" flatOptions
+
 end Pakila.CLI.Prompts
+

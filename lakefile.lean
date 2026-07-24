@@ -18,7 +18,7 @@ require LeanTensor from "../LeanTensor"
 require nomos from "../nomos"
 require lyceum from "../Lyceum"
 require Lbir from "../lbir"
-require batteries from "../kaihatsu/apps/std4_fork"
+
 
 
 extern_lib «pakila_native_kernels» (pkg : NPackage _package.name) := do

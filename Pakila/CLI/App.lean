@@ -1,6 +1,6 @@
 import Pakila
 import Lyceum.Memory.VectorDB -- New import
-import Lyceum.Memory.NativeEmbedding -- New import
+import Pakila.Memory.NativeEmbedding -- New import
 import Pakila.Core.DigitalTwin
 import Pakila.Core.ContextLoader
 import Pakila.CLI.RewindUI
@@ -11,6 +11,7 @@ import Pakila.Governance.SkillManager
 import Pakila.Governance.GitManager
 import Pakila.Config.Loader
 import Pakila.MainLoop
+import Pakila.Core.LlmManager
 import Pakila.Core.Environment -- Keep for BashEngine.cwd, but use Lyceum's TerminalEnv
 import Pakila.Plugins.Dispatcher
 import Pakila.Core.Bash
@@ -26,7 +27,6 @@ open Pakila.Core.DigitalTwin
 open Pakila.CLI.Prompts
 open Lyceum.Core.Environment -- Open to bring TerminalEnv into scope
 open Lyceum.Memory -- Open for VectorDB, NativeEmbedding, VectorEntry
-open Lyceum.Inference.Gemma.Embedding -- For Vector type
 
 namespace Pakila.CLI.App
 
@@ -106,8 +106,8 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
     let allModels := categories.foldl (fun acc (_, ms) => acc ++ ms) []
     if !config.llmModel.isEmpty then
       match allModels.find? (fun p => p.1.contains config.llmModel) with
-      | some m => pure m | none => pure ("", .remote remoteClient)
-    else if categories.isEmpty then pure ("", .remote remoteClient)
+      | some m => pure m | none => pure ("", LlmInstance.remote remoteClient)
+    else if categories.isEmpty then pure ("", LlmInstance.remote remoteClient)
     else if categories.length == 1 && categories[0]!.2.length == 1 then pure categories[0]!.2[0]!
     else
       match (← selectModelFlat categories) with
@@ -116,7 +116,7 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
           if h : !categories.isEmpty && !categories[0]!.2.isEmpty then
             pure categories[0]!.2[0]!
           else
-            pure ("", .remote remoteClient)
+            pure ("", LlmInstance.remote remoteClient)
 
   if selectedModelName.isEmpty then return
 
@@ -128,9 +128,7 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
     let mut embModel := none
     let bertPath ← expandPath (config.embeddingModelPath.getD "models/bert.gguf")
     if ← TerminalEnv.pathExists bertPath then
-      match (← Lyceum.Memory.initNativeEmbedding bertPath.toString) with
-      | Except.ok m => embModel := some m
-      | Except.error _ => pure ()
+      embModel := some bertPath.toString
 
     let initialState : InterpreterState := {
       history := [Message.mkText .system fullSystemPrompt],

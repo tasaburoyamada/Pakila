@@ -35,7 +35,9 @@ instance : TerminalEnv MockM where
   appendHistory _ _ := pure ()
   readFile path := do
     let st ← get
-    pure (st.files.findD path.toString "")
+    match st.files.find? (fun (p, _) => p == path.toString) with
+    | some (_, c) => pure c
+    | none => pure ""
   readBinFile _ := pure ByteArray.empty
   writeFile path content := modify (fun st => { st with files := (path.toString, content) :: st.files.filter (fun (p, _) => p != path.toString) })
   createDirAll _ := pure ()
@@ -46,9 +48,10 @@ instance : TerminalEnv MockM where
   isDir _ := pure false
   readDir _ := pure []
   getFileName _ := pure ""
-  spawnProcess _ := pure (.ok { stdin := IO.Process.Stdio.null, stdout := IO.Process.Stdio.null, stderr := IO.Process.Stdio.null, pid := 0, kill := pure (), wait := pure 0 })
+  spawnProcess _ := pure (.error "spawnProcess not supported in MockTerminal")
   getEnv _ := pure none
   getCurrentDir := pure (System.FilePath.mk ".")
   runProcess _ := pure (.ok { exitCode := 0, stdout := "", stderr := "" })
+  renderUserTurn msg := modify (fun st => { st with outputs := st.outputs ++ [msg ++ "\n"] })
 
 end Pakila.Test

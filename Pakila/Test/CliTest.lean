@@ -1,11 +1,10 @@
-import Nomos.MockTerminal
+import Pakila.Test.MockTerminal
 import Pakila.CLI.SlashCommands
 import Pakila.CLI.Renderer
 import Pakila.Core.Interface
 
 namespace Pakila.Test
 open Pakila.CLI
-open Nomos.Mock
 
 /-- テストケース構造体 -/
 structure TestCase where
@@ -14,7 +13,7 @@ structure TestCase where
 
 /-- テストランナー -/
 def runTest (t : TestCase) : IO Bool := do
-  let initialState : MockTerminalState := { inputs := [], outputs := [] }
+  let initialState : MockTerminalState := { inputs := [], outputs := [], files := [] }
   let (result, _) ← t.run.run initialState
   if result then
     IO.println s!"[PASS] {t.name}"
