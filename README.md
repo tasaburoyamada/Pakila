@@ -16,12 +16,10 @@
 
 ## 📚 ドキュメント (Documentation)
 
-- **[PROJECT_DEFINITION.md](./PROJECT_DEFINITION.md)**: プロジェクトの目的、原則、ロードマップ。
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)**: Lean 4 による詳細なシステム設計。
-- **[HOW_TO_USE.md](./HOW_TO_USE.md)**: セットアップと使用方法。
-- **[ORIGIN.md](./ORIGIN.md)**: プロジェクト名の由来。
-- **[DEVELOPMENT_HISTORY.md](./DEVELOPMENT_HISTORY.md)**: 開発動機と解決策の変遷。
-- **[ISSUES.md](./ISSUES.md)**: 既知の課題と将来の展望。
+- **[ARCH_PAKILA_CORE.md](./doc/ARCH_PAKILA_CORE.md)**: Lean 4 システムアーキテクチャ・C4モデル・ADR。
+- **[SPEC_INTERFACE_AND_CLI.md](./doc/SPEC_INTERFACE_AND_CLI.md)**: UI/UX・Gemini 2.0 モダナイズ仕様・CLI。
+- **[GOV_VLOG_AND_SECURITY.md](./doc/GOV_VLOG_AND_SECURITY.md)**: Vlog ベクトルステート・ガバナンス・物理境界防腐規則。
+- **[CURRENT_STATUS.md](./doc/CURRENT_STATUS.md)**: 最新の開発状況と検証ステータス。
 
 ## 🚀 クイックスタート (Quick Start)
 

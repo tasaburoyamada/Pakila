@@ -15,3 +15,10 @@
 - **スタブの禁止**: 全ての実装は物理的な裏付け（FFI, Bash 実行, 等）を伴わなければならない。
 - **UI/UX 同期**: 出力形式は常にホストの Gemini CLI と完全に同期させ、シンボリックかつ高密度な記述を維持せよ。
 - **数理的堅牢性**: Lean 4 の型システムを最大限に活用し、状態遷移の安全性を静的に保証せよ。
+
+## 設計書ポインタ (Document Pointers)
+- **コアアーキテクチャ設計書**: [ARCH_PAKILA_CORE.md](./doc/ARCH_PAKILA_CORE.md)
+- **インターフェース & CLI 機能仕様書**: [SPEC_INTERFACE_AND_CLI.md](./doc/SPEC_INTERFACE_AND_CLI.md)
+- **統治 & セキュリティ仕様書**: [GOV_VLOG_AND_SECURITY.md](./doc/GOV_VLOG_AND_SECURITY.md)
+- **開発ステータス**: [CURRENT_STATUS.md](./doc/CURRENT_STATUS.md)
+
