@@ -1,0 +1,20 @@
+2026-07-29T23:58:08+09:00
+
+## 指示内容
+
+`narrative-dynamics`（物語ダイナミクス理論）に基づく Pakila への機能実装指示。
+
+## 実施した実装内容（ブランチ: feature/narrative-dynamics）
+
+1. **VlogNode 拡張 (`Lyceum/Governance/Vlog.lean`)**:
+   - `@IRREVERSIBLE:[BEFORE:b|AFTER:a]`: 不可逆な状態変化を固定・記録。安易な日常リセットを抑圧。
+   - `@GAP:[PRED:p|REALITY:r]`: 期待値ギャップ（認知のゆさぶり）を生成指示。
+   - `@TRADEOFF:[OPTION_A:a|OPTION_B:b]`: どちらを選択しても実質的代償を払う究極の葛藤を指示。
+   - `@NARRATIVE:[ROLE:r|TONE:t]`: ナレーターの役割・語り口（視点反転、動揺、共犯化）を変調。
+
+2. **VlogParser.lean 拡張**:
+   - `parseIrreversible`, `parseExpectationGap`, `parseConflictTradeoff`, `parseNarrativePerspective` を追加。
+   - `formatVlogState` に `[Narrative Dynamics Mandate]` を生成・注入するルールを定義。
+
+3. **PromptManager.lean 規範強化**:
+   - システムプロンプトに `[Narrative Dynamics Mandate]`（不可逆変化・期待値ギャップ・実質的トレードオフ・抵抗の維持）を注入。

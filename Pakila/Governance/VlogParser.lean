@@ -113,8 +113,72 @@ def parseCadenceDyna : Parser VlogNode := do
   let nums := content.splitOn "," |>.filterMap (fun s => s.trimAscii.toString.toNat?)
   return .CadenceDyna nums
 
+/-- @IRREVERSIBLE:[BEFORE:b|AFTER:a] のパース -/
+def parseIrreversible : Parser VlogNode := do
+  let _ ← pstring "@IRREVERSIBLE:["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  let parts := content.splitOn "|"
+  let mut b := ""; let mut a := ""
+  for part in parts do
+    let kv := part.splitOn ":"
+    if kv.length == 2 then
+      let k := kv[0]!.trimAscii.toString
+      let v := kv[1]!.trimAscii.toString
+      if k == "BEFORE" then b := v
+      else if k == "AFTER" then a := v
+  return .IrreversibleShift b a
+
+/-- @GAP:[PRED:p|REALITY:r] のパース -/
+def parseExpectationGap : Parser VlogNode := do
+  let _ ← pstring "@GAP:["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  let parts := content.splitOn "|"
+  let mut p := ""; let mut r := ""
+  for part in parts do
+    let kv := part.splitOn ":"
+    if kv.length == 2 then
+      let k := kv[0]!.trimAscii.toString
+      let v := kv[1]!.trimAscii.toString
+      if k == "PRED" then p := v
+      else if k == "REALITY" then r := v
+  return .ExpectationGap p r
+
+/-- @TRADEOFF:[OPTION_A:a|OPTION_B:b] のパース -/
+def parseConflictTradeoff : Parser VlogNode := do
+  let _ ← pstring "@TRADEOFF:["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  let parts := content.splitOn "|"
+  let mut a := ""; let mut b := ""
+  for part in parts do
+    let kv := part.splitOn ":"
+    if kv.length == 2 then
+      let k := kv[0]!.trimAscii.toString
+      let v := kv[1]!.trimAscii.toString
+      if k == "OPTION_A" then a := v
+      else if k == "OPTION_B" then b := v
+  return .ConflictTradeoff a b
+
+/-- @NARRATIVE:[ROLE:r|TONE:t] のパース -/
+def parseNarrativePerspective : Parser VlogNode := do
+  let _ ← pstring "@NARRATIVE:["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  let parts := content.splitOn "|"
+  let mut r := ""; let mut t := ""
+  for part in parts do
+    let kv := part.splitOn ":"
+    if kv.length == 2 then
+      let k := kv[0]!.trimAscii.toString
+      let v := kv[1]!.trimAscii.toString
+      if k == "ROLE" then r := v
+      else if k == "TONE" then t := v
+  return .NarrativePerspective r t
+
 def vlogNodeParser : Parser VlogNode :=
-  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna
+  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna <|> parseIrreversible <|> parseExpectationGap <|> parseConflictTradeoff <|> parseNarrativePerspective
 
 /-- 個別の行をパースして VlogNode を生成する。 -/
 def parseVlogLine (line : String) : Option VlogNode :=
@@ -134,7 +198,7 @@ def parseVlogString (input : String) : Except String (List VlogNode) :=
 def formatVlogState (nodes : List VlogNode) : String :=
   if nodes.isEmpty then ""
   else
-    let header := "## [HV-CAD Vector-State Injection & Anti-Averaging Dynamics]\n"
+    let header := "## [HV-CAD Vector-State Injection & Narrative Dynamics Mandate]\n"
     nodes.foldl (fun acc node =>
       match node with
       | .Ctx d s g => acc ++ s!"- Context: Domain={d}, Sub={s}, Goal={g}\n"
@@ -147,6 +211,10 @@ def formatVlogState (nodes : List VlogNode) : String :=
       | .DensityFocus t => acc ++ s!"- [HIGH-DENSITY FOCUS]: Eliminate generalities/filler. Concentrate exact facts & structure on: {t}\n"
       | .DensitySlack t => acc ++ s!"- [LOW-DENSITY SLACK]: State concisely in 1-2 sentences. Retain spatial/cultural silence on: {t}\n"
       | .CadenceDyna pat => acc ++ s!"- [CADENCE RHYTHM DYNAMICS]: Vary sentence lengths sharply according to sequence [{String.intercalate ", " (pat.map toString)}]\n"
+      | .IrreversibleShift b a => acc ++ s!"- [IRREVERSIBLE STATE TRANSITION]: Permanently transform state from '{b}' -> '{a}'. DO NOT reset to initial state.\n"
+      | .ExpectationGap p r => acc ++ s!"- [EXPECTATION GAP / SUBVERSION]: Undermine user's implicit prediction '{p}' with logical reality '{r}'.\n"
+      | .ConflictTradeoff a b => acc ++ s!"- [GENUINE CONFLICT TRADEOFF]: Enforce unavoidable choice between '{a}' vs '{b}'. Both must entail severe cost.\n"
+      | .NarrativePerspective r t => acc ++ s!"- [NARRATIVE PERSPECTIVE & TONE]: Adopt narrator role '{r}' with tone '{t}'.\n"
     ) header
 
 /-- メッセージの先頭に .vlog ステートを注入する -/
