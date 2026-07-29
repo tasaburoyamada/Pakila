@@ -19,9 +19,9 @@ def handleWriteFile (cont : Continuation IO) (config : AppConfig) (client : LlmI
   let toolMsg : Message := { role := .tool, parts := [.toolResponse "write_file" "Success"] }
   let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
   if s.skipTrust then 
-    cont.runLoop nextS
+    cont.runLoop finalS
   else 
-    cont.runLoop nextS
+    cont.runLoop finalS
 
 /-- ファイル読み込みアクションを処理する -/
 def handleReadFile (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (path : String) (start : Option Nat) (endL : Option Nat) : IO Unit := do

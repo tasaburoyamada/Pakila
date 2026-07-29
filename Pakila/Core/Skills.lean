@@ -24,11 +24,11 @@ def handleActivateSkill (cont : Continuation IO) (config : AppConfig) (client : 
     let toolMsg : Message := { role := .tool, parts := [.toolResponse "activate_skill" content] }
     TerminalEnv.print (applyColor .green s!"✔  Skill '{name}' activated.\n")
     let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
-    cont.runLoop nextS
+    cont.runLoop finalS
   catch e =>
     TerminalEnv.print (applyColor .red s!"✖  Skill Activation Failed: {e}\n")
     let toolMsg : Message := { role := .tool, parts := [.toolResponse "activate_skill" s!"Error: {e}"] }
     let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
-    cont.runLoop nextS
+    cont.runLoop finalS
 
 end Pakila
