@@ -23,6 +23,10 @@ structure AppConfig where
   debug : Bool := false
   uiTheme : Theme := { user := .cyan, ai := .green, error := .red, system := .yellow }
   policies : List String := []
+  trustedFolders : List String := []
+  fallbackPolicy : String := "transparent_retry"
+  autoFallback : Bool := true
+  interactiveFpsLimit : Nat := 60
 deriving Repr, Lean.ToJson, Lean.FromJson, Inhabited
 
 /-- 環境変数を取得し、設定をオーバーライドする -/
@@ -86,6 +90,10 @@ def parseSimpleToml (content : String) : AppConfig :=
             | "timeoutMs" => { config with timeoutMs := val.toNat? }
             | "debug" => { config with debug := (val == "true") }
             | "policies" => { config with policies := val.splitOn "," |>.map (fun s => s.trimAscii.toString) }
+            | "trustedFolders" => { config with trustedFolders := val.splitOn "," |>.map (fun s => s.trimAscii.toString) }
+            | "fallbackPolicy" => { config with fallbackPolicy := val }
+            | "autoFallback" => { config with autoFallback := (val == "true") }
+            | "interactiveFpsLimit" => { config with interactiveFpsLimit := val.toNat?.getD 60 }
             | _ => config
           loop rest newConfig
         else
@@ -97,6 +105,7 @@ def configToToml (config : AppConfig) : String :=
   let bertPath := match config.embeddingModelPath with | some p => s!"\"{p}\"" | none => "\"\""
   let timeout := match config.timeoutMs with | some t => s!"{t}" | none => s!"{defaultTimeoutMs}"
   let policiesStr := String.intercalate "," config.policies
+  let trustedFoldersStr := String.intercalate "," config.trustedFolders
   s!"llmModel = \"{config.llmModel}\"\n" ++
   s!"llmApiUrl = \"{config.llmApiUrl}\"\n" ++
   s!"llmApiKey = {apiKey}\n" ++
@@ -104,7 +113,11 @@ def configToToml (config : AppConfig) : String :=
   s!"embeddingModelPath = {bertPath}\n" ++
   s!"timeoutMs = {timeout}\n" ++
   s!"debug = {if config.debug then "true" else "false"}\n" ++
-  s!"policies = \"{policiesStr}\"\n"
+  s!"policies = \"{policiesStr}\"\n" ++
+  s!"trustedFolders = \"{trustedFoldersStr}\"\n" ++
+  s!"fallbackPolicy = \"{config.fallbackPolicy}\"\n" ++
+  s!"autoFallback = {if config.autoFallback then "true" else "false"}\n" ++
+  s!"interactiveFpsLimit = {config.interactiveFpsLimit}\n"
 
 /-- 設定ファイルを保存する -/
 def saveConfig (path : System.FilePath) (config : AppConfig) : IO (Except AppError Unit) := do

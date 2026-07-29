@@ -14,6 +14,11 @@ systemPrompt = """あなたはエンジニアを強力に支援するエキス�
 
 embeddingModelPath = "models/bert.gguf"
 debug = false
+policies = ""
+trustedFolders = "/home/tasaburoyamada/sandbox"
+fallbackPolicy = "transparent_retry"
+autoFallback = true
+interactiveFpsLimit = 60
 
 [uiTheme]
 user = "cyan"
