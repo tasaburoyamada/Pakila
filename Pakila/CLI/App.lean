@@ -1,6 +1,6 @@
 import Pakila
-import Lyceum.Memory.VectorDB -- New import
-import Pakila.Memory.NativeEmbedding -- New import
+import Lyceum.Memory.VectorDB
+import Pakila.Memory.NativeEmbedding
 import Pakila.Core.DigitalTwin
 import Pakila.Core.ContextLoader
 import Pakila.CLI.RewindUI
@@ -9,16 +9,17 @@ import Pakila.CLI.TerminalBase
 import Pakila.Governance.McpManager
 import Pakila.Governance.SkillManager
 import Pakila.Governance.GitManager
+import Pakila.Governance.VlogParser
 import Pakila.Config.Loader
 import Pakila.MainLoop
 import Pakila.Core.LlmManager
-import Pakila.Core.Environment -- Keep for BashEngine.cwd, but use Lyceum's TerminalEnv
+import Pakila.Core.Environment
 import Pakila.Plugins.Dispatcher
 import Pakila.Core.Bash
 import Pakila.Plugins.Sandbox
 import Pakila.Core.ResourceManager
 import Pakila.Plugins.WasmLoader
-import Lyceum.Core.Environment -- For TerminalEnv
+import Lyceum.Core.Environment
 
 open Pakila
 open Lyceum
@@ -133,7 +134,22 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
     let initialState : InterpreterState := {
       history := [Message.mkText .system fullSystemPrompt],
       vectorDb := initialDb,
-      vlogState := [],
+      -- 試案①: 起動時に .vlog ファイルを探索・パースして都子に格納する
+      vlogState := (← do
+        -- 1. カレントディレクトリの DESIGN_SPEC.vlog
+        -- 2. configDir / DESIGN_SPEC.vlog の順で探索
+        let candidates : List System.FilePath := [
+          System.FilePath.mk "DESIGN_SPEC.vlog",
+          currentConfigDir / "DESIGN_SPEC.vlog"
+        ]
+        let mut nodes : List VlogNode := []
+        for candidate in candidates do
+          if ← candidate.pathExists then
+            let content ← IO.FS.readFile candidate
+            match parseVlogString content with
+            | .ok parsed => nodes := parsed; break
+            | .error _   => pure ()
+        pure nodes),
       embeddingModel := embModel,
       sessionId := runArgs.session.getD "current",
       interactive := runArgs.prompt.isNone && runArgs.query.isEmpty,

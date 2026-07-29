@@ -18,15 +18,16 @@ open Lyceum.Core.Environment
 namespace Pakila
 
 /-- 物理アクションの実行層: バグはこの関数にのみ集約される -/
-def runAction (action : MachineAction) (dispatcher : Dispatcher) (activeLlm : LlmInstance) [TerminalEnv IO] : IO (Except String String) := do
+def runAction (action : MachineAction) (dispatcher : Dispatcher) (activeLlm : LlmInstance)
+    (llmOptions : Option Lyceum.LlmRequestOptions := none) [TerminalEnv IO] : IO (Except String String) := do
   match action with
   | .Quit => pure (Except.ok "Quit")
   | .CallLlm msgs => do
-      match ← Lyceum.LlmBackend.streamChatCompletion activeLlm msgs none with
+      match ← Lyceum.LlmBackend.streamChatCompletion activeLlm msgs llmOptions with
       | Except.ok (responseMsgs : List Lyceum.Message) =>
           let rawText := responseMsgs.foldl (fun acc (m : Lyceum.Message) => acc ++ m.content) ""
           let structuredResponse := parseStructuredLlmResponse rawText
-          pure (Except.ok (toString (Lean.toJson structuredResponse))) -- Return JSON string
+          pure (Except.ok (toString (Lean.toJson structuredResponse)))
       | Except.error e => pure (Except.error s!"LLM Error: {repr e}")
   | .ExecuteBash cmd => 
       -- Bash 実行は IO

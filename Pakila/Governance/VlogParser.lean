@@ -108,7 +108,7 @@ def parseVlogString (input : String) : Except String (List VlogNode) :=
   let nodes := lines.filterMap parseVlogLine
   Except.ok nodes
 
-/-- VlogNode のリストからプロンプト注入用の文字列を生成する -/
+/-- VlogNodeのリストからプロンプト注入用の文字列を生成する -/
 def formatVlogState (nodes : List VlogNode) : String :=
   if nodes.isEmpty then ""
   else
@@ -132,17 +132,66 @@ def injectVlogState (nodes : List VlogNode) (msg : Message) : Message := Id.run 
   let mut injected := false
   for part in msg.parts do
     match part with
-    | .text t => 
+    | .text t =>
         if !injected then
           updatedParts := (.text (vlogStr ++ "\n" ++ t)) :: updatedParts
           injected := true
         else
           updatedParts := part :: updatedParts
     | _ => updatedParts := part :: updatedParts
-  
+
   if !injected then
     updatedParts := (.text vlogStr) :: updatedParts
-  
+
   return { msg with parts := updatedParts.reverse }
+
+-- ===========================================================================
+-- 試案㋢： @BIAS → LlmRequestOptions 物理マッピング
+-- ===========================================================================
+
+/--
+@BIASノードの各パラメータを LlmRequestOptions に変換する。
+
+パラメータ定義：
+  - D (Determinism, 0.0–1.0): 高いほど決定論的。temperature = 1.0 - D
+  - P (Precision,    0.0–1.0): 语彙分布の集中度。topP としてそのまま使用。
+  - M (MaxContext,   0.0–1.0): 将来の maxTokens 制御用に保留（現時点未接続）。
+  - S, C: テキスト注入側の強調度制御用に保留。
+-/
+def biasToRequestOptions (nodes : List VlogNode) : Option Lyceum.LlmRequestOptions :=
+  let biasOpt := nodes.findSome? (fun n => match n with | .Bias p m s d c => some (p, m, s, d, c) | _ => none)
+  match biasOpt with
+  | none => none
+  | some (p, _m, _s, d, _c) =>
+    let temperature := some (max 0.0 (min 2.0 (1.0 - d)))
+    let topP        := if p > 0.0 && p <= 1.0 then some p else none
+    some { temperature := temperature, topP := topP, maxTokens := none }
+
+-- ===========================================================================
+-- 試案㋣： ! (Mandatory) 制約のプリフライトチェック
+-- ===========================================================================
+
+/--
+@ShiftMandatory ノードの制約名リストを抽出する。
+-/
+def extractMandatoryConstraints (nodes : List VlogNode) : List String :=
+  nodes.filterMap (fun n => match n with | .ShiftMandatory t => some t | _ => none)
+
+/--
+制約名と入力テキストによるキーワード照合による充足判定。
+制約名の各トークン（アンダースコア分割）が入力に存在すれば充足とみなす。
+不充足の場合は PolicyViolation エラーを返す。
+-/
+def checkMandatoryConstraints
+    (nodes : List VlogNode) (input : String) : Except Lyceum.AppError Unit :=
+  let constraints := extractMandatoryConstraints nodes
+  let inputLower := input.toLower
+  -- 制約名を "_" で分割し、どのトークンも入力に含まれない制約を未充足とみなす
+  let unmet := constraints.filter (fun constraint =>
+    let tokens := (constraint.toLower).splitOn "_"
+    !tokens.any (fun token => !token.isEmpty && inputLower.contains token))
+  match unmet with
+  | [] => .ok ()
+  | vs => .error (.PolicyViolation s!"Mandatory constraints not satisfied: {vs}")
 
 end Pakila

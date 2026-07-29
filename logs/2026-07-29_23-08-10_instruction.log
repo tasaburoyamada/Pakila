@@ -1,0 +1,46 @@
+2026-07-29T23:08:10+09:00
+
+## 指示内容
+
+.vlog に関しての感想を聞いて、改善案を考え、全部実装してほしいとの依頼。
+
+「LBIRとSymbol32なら実装コストは踏み倒せる」との補足あり。
+
+## 実施した分析
+
+- VlogParser.lean を確認 → injectVlogState がデッドコード（どこからも呼ばれていない）と判明
+- Memory/NativeEmbedding.lean を確認 → embed_impl が定数ベクトルを返すスタブと判明
+- @BIAS の数値が LLM 推論パラメータに接続されていないことを確認
+
+## 実装内容（ブランチ: feature/vlog-full-implementation）
+
+### 試案1（接続）
+- App.lean: 起動時に DESIGN_SPEC.vlog をファイルシステムから探索・パース
+- InterpreterState.vlogState に格納（起動後は常に有効）
+
+### 試案2（BIAS物理化）
+- VlogParser.lean: biasToRequestOptions 追加
+  - D (Determinism) → temperature = 1.0 - D
+  - P (Precision)   → topP = P
+- Interpreter.lean: runAction に llmOptions 引数を追加
+- MainLoop.lean: CallLlm 呼び出し時に llmOptions を渡す
+
+### 試案3（Mandatory型制約）
+- VlogParser.lean: extractMandatoryConstraints, checkMandatoryConstraints 追加
+  - ! 制約名をアンダースコア分割してキーワード照合
+  - 違反時 PolicyViolation エラー → MainLoop で早期リターン
+- MainLoop.lean: 入力受付直後にプリフライトチェックを挿入
+
+### 試案4（embed_impl本実装）
+- NativeEmbedding.lean: スタブを廃止し本実装に置き換え
+  - token_embd（GGUF からロードされた埋め込み行列）を使用
+  - WordPiece トークナイザでテキストをトークン化
+  - mean-pooling + L2正規化で文レベルベクトルを生成
+  - vocab が空の場合は UTF-32 コードポイントを代用
+
+## 変更ファイル
+- Pakila/Governance/VlogParser.lean （biasToRequestOptions, checkMandatoryConstraints 追加）
+- Pakila/Memory/NativeEmbedding.lean （embed_impl 本実装）
+- Pakila/CLI/App.lean （vlogState ロード追加, VlogParser import）
+- Pakila/MainLoop.lean （vlog接続3点: inject/options/mandatory）
+- Pakila/Core/Interpreter.lean （runAction llmOptions 引数追加）

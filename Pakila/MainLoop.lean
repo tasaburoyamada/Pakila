@@ -8,6 +8,7 @@ import Pakila.CLI.Theme
 import Pakila.CLI.Renderer
 import Pakila.Protocol.Types
 import Pakila.CLI.SlashCommands
+import Pakila.Governance.VlogParser
 
 open Pakila
 open Pakila.Protocol
@@ -61,14 +62,31 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
           runLoop (maxTurns - 1) config s dispatcher categories
         else
           Pakila.renderUserTurn input
+
+          -- 試案④: Mandatory 制約のプリフライトチェック
+          match checkMandatoryConstraints s.vlogState input with
+          | .error (.PolicyViolation msg) =>
+            TerminalEnv.println (applyColor .red s!"[Policy]: {msg}")
+            runLoop (maxTurns - 1) config s dispatcher categories
+          | .error e =>
+            TerminalEnv.println (applyColor .red s!"[Policy Error]: {repr e}")
+            runLoop (maxTurns - 1) config s dispatcher categories
+          | .ok () =>
+
           -- 2. 状態遷移 (論理界: 純粋関数・証明可能)
-          let (action, nextS) := Pakila.transition s [.text input]
+          -- 試案②: injectVlogState でユーザーメッセージに vlog コンテキストを注入
+          let rawParts : List Lyceum.MessagePart := [.text input]
+          let userMsg : Lyceum.Message := { role := .user, parts := rawParts }
+          let injectedMsg := injectVlogState s.vlogState userMsg
+          let (action, nextS) := Pakila.transition s injectedMsg.parts
 
           -- 3. アクション実行 (物理界: バグ発生源)
+          -- 試案③: biasToRequestOptions で @BIAS を LlmRequestOptions に変換
+          let llmOptions := biasToRequestOptions s.vlogState
           match action with
           | .CallLlm msgs =>
             -- LLM呼び出しの場合、StructuredLlmResponseを期待
-            match ← Pakila.runAction action dispatcher s.activeLlm with
+            match ← Pakila.runAction action dispatcher s.activeLlm llmOptions with
             | Except.ok jsonStr =>
               match Json.parse jsonStr with
               | .ok json =>
@@ -111,7 +129,7 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
               TerminalEnv.println (applyColor .red s!"[Error]: LLM Action failed: {e}")
               runLoop (maxTurns - 1) config nextS dispatcher categories
           | _ => -- その他のアクションは直接実行して結果を表示
-            match ← Pakila.runAction action dispatcher s.activeLlm with
+            match ← Pakila.runAction action dispatcher s.activeLlm llmOptions with
             | Except.ok "Quit" => do
                 (← IO.getStdout).flush
                 (← IO.getStderr).flush
