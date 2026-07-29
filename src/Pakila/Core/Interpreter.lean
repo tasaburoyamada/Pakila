@@ -7,7 +7,7 @@ import Pakila.Plugins.Sandbox
 import Lyceum.Inference
 import Pakila.Core.Primitives
 
-import Batteries.Lean.Json
+import Lean.Data.Json
 import Lyceum.Core.Environment
 
 open Lyceum.Protocol -- New open statement

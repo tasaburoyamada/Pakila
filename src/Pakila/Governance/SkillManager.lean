@@ -1,6 +1,7 @@
 import Lyceum.Types
 import Lyceum.Inference
 import Pakila.Core.Environment
+import Pakila.Config.Loader
 
 open Lyceum
 open Pakila
@@ -21,8 +22,9 @@ deriving Repr, Inhabited
 
 /-- スキルが配置されているディレクトリの取得 -/
 def getSkillDirectories (configDir : System.FilePath) : IO (List System.FilePath) := do
+  let xdgConfigDir ← getPakilaConfigDir
   let projectDir := [System.FilePath.mk ".agents" / "skills"]
-  return projectDir ++ [configDir / "skills"]
+  return projectDir ++ [configDir / "skills", xdgConfigDir / "skills"]
 
 /-- SKILL.md から説明文を抽出する簡易パーサー -/
 def extractDescription (content : String) : String :=

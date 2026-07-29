@@ -1,6 +1,6 @@
 import Pakila
 import Lyceum.Memory.VectorDB -- New import
-import Lyceum.Memory.NativeEmbedding -- New import
+-- import Lyceum.Memory.NativeEmbedding -- New import
 import Pakila.Core.DigitalTwin
 import Pakila.Core.ContextLoader
 import Pakila.CLI.RewindUI
@@ -10,6 +10,7 @@ import Pakila.Governance.McpManager
 import Pakila.Governance.SkillManager
 import Pakila.Governance.GitManager
 import Pakila.Config.Loader
+import Pakila.Core.LlmManager
 import Pakila.MainLoop
 import Pakila.Core.Environment -- Keep for BashEngine.cwd, but use Lyceum's TerminalEnv
 import Pakila.Plugins.Dispatcher
@@ -26,17 +27,28 @@ open Pakila.Core.DigitalTwin
 open Pakila.CLI.Prompts
 open Lyceum.Core.Environment -- Open to bring TerminalEnv into scope
 open Lyceum.Memory -- Open for VectorDB, NativeEmbedding, VectorEntry
-open Lyceum.Inference.Gemma.Embedding -- For Vector type
 
 namespace Pakila.CLI.App
 
+/-- フラットにカテゴリ別モデルを選択するヘルパー -/
+def selectModelFlat [TerminalEnv IO] (categories : List (String × List (String × LlmInstance))) : IO (Option (String × LlmInstance)) := do
+  let mut options : List (String × (String × LlmInstance)) := []
+  for (cat, models) in categories do
+    for (name, inst) in models do
+      options := options ++ [(s!"[{cat}] {name}", (name, inst))]
+  if options.isEmpty then return none
+  let optStrings := options.map (·.1)
+  match (← Pakila.CLI.Prompts.selectOption "モデルを選択してください:" optStrings) with
+  | some idx => return options[idx]?.map (·.2)
+  | none => return none
+
 private def getConfigPath [TerminalEnv IO] : IO System.FilePath := do
+  let xdgDir ← getPakilaConfigDir
+  let xdgConfig := xdgDir / "config.toml"
+  if ← xdgConfig.pathExists then return xdgConfig
   let localConfig := System.FilePath.mk "config.toml"
   if ← localConfig.pathExists then return localConfig
-  let homeOption ← IO.getEnv "HOME"
-  let home := homeOption.getD "."
-  let homePath := System.FilePath.mk home
-  return homePath / ".config" / "pakila" / "config.toml"
+  return xdgConfig
 
 private def expandPath (path : String) : IO System.FilePath := do
   if path.startsWith "~" then
@@ -128,9 +140,10 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
     let mut embModel := none
     let bertPath ← expandPath (config.embeddingModelPath.getD "models/bert.gguf")
     if ← TerminalEnv.pathExists bertPath then
-      match (← Lyceum.Memory.initNativeEmbedding bertPath.toString) with
-      | Except.ok m => embModel := some m
-      | Except.error _ => pure ()
+      -- match (← Lyceum.Memory.initNativeEmbedding bertPath.toString) with
+      -- | Except.ok m => embModel := some m
+      -- | Except.error _ => pure ()
+      pure ()
 
     let initialState : InterpreterState := {
       history := [Message.mkText .system fullSystemPrompt],

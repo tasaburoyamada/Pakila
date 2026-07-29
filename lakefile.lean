@@ -4,7 +4,7 @@ open Lake DSL
 package «pakila» where
 
 lean_lib «Pakila» where
-  srcDir := "."
+  srcDir := "src"
 
 lean_lib «test» where
   srcDir := "."
@@ -18,14 +18,13 @@ require LeanTensor from "../LeanTensor"
 require nomos from "../nomos"
 require lyceum from "../Lyceum"
 require Lbir from "../lbir"
-require batteries from "../kaihatsu/apps/std4_fork"
 
 
 extern_lib «pakila_native_kernels» (pkg : NPackage _package.name) := do
   let name := nameToStaticLib "pakila_native_kernels"
   let src ← inputTextFile (pkg.dir / "src" / "native" / "kernels.c")
   let wasmtimeInclude := pkg.dir / "deps" / "wasmtime" / "include"
-  let ffiO ← buildO "kernels.o" src #[
+  let ffiO ← buildO (pkg.buildDir / "ir" / "kernels.o") src #[
     "-I", (← getLeanIncludeDir).toString,
     "-I", wasmtimeInclude.toString,
     "-fPIC", "-O3"

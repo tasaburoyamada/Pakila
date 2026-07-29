@@ -110,13 +110,26 @@ def saveConfig (path : System.FilePath) (config : AppConfig) : IO (Except AppErr
   catch e =>
     return Except.error (AppError.IoError s!"Failed to save config: {e}")
 
-/-- 設定ファイルを読み込む -/
+/-- XDG Base Directory 規格に基づく Pakila の設定ディレクトリパスを取得する -/
+def getPakilaConfigDir : IO System.FilePath := do
+  if let some xdg ← IO.getEnv "XDG_CONFIG_HOME" then
+    return System.FilePath.mk xdg / "pakila"
+  else if let some home ← IO.getEnv "HOME" then
+    return System.FilePath.mk home / ".config" / "pakila"
+  else
+    return System.FilePath.mk ".config" / "pakila"
+
+/-- 設定ファイルを読み込む (XDG 設定ディレクトリ -> 指定パスの順で検索) -/
 def loadConfig (path : System.FilePath) : IO (Except AppError AppConfig) := do
-  if !(← path.pathExists) then
+  let configDir ← getPakilaConfigDir
+  let xdgConfigPath := configDir / "config.toml"
+  let targetPath := if ← xdgConfigPath.pathExists then xdgConfigPath else path
+
+  if !(← targetPath.pathExists) then
     let config ← overrideWithEnv {}
     return Except.ok config
   else
-    let content ← TerminalEnv.readFile path
+    let content ← TerminalEnv.readFile targetPath
     let baseConfig := parseSimpleToml content
     let finalConfig ← overrideWithEnv baseConfig
     return Except.ok finalConfig
