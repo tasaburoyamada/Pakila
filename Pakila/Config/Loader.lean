@@ -22,6 +22,7 @@ structure AppConfig where
   timeoutMs : Option Nat := some defaultTimeoutMs
   debug : Bool := false
   uiTheme : Theme := { user := .cyan, ai := .green, error := .red, system := .yellow }
+  policies : List String := []
 deriving Repr, Lean.ToJson, Lean.FromJson, Inhabited
 
 /-- 環境変数を取得し、設定をオーバーライドする -/
@@ -84,6 +85,7 @@ def parseSimpleToml (content : String) : AppConfig :=
             | "embeddingModelPath" => { config with embeddingModelPath := some val }
             | "timeoutMs" => { config with timeoutMs := val.toNat? }
             | "debug" => { config with debug := (val == "true") }
+            | "policies" => { config with policies := val.splitOn "," |>.map (fun s => s.trimAscii.toString) }
             | _ => config
           loop rest newConfig
         else
@@ -94,13 +96,15 @@ def configToToml (config : AppConfig) : String :=
   let apiKey := match config.llmApiKey with | some k => s!"\"{k}\"" | none => "\"\""
   let bertPath := match config.embeddingModelPath with | some p => s!"\"{p}\"" | none => "\"\""
   let timeout := match config.timeoutMs with | some t => s!"{t}" | none => s!"{defaultTimeoutMs}"
+  let policiesStr := String.intercalate "," config.policies
   s!"llmModel = \"{config.llmModel}\"\n" ++
   s!"llmApiUrl = \"{config.llmApiUrl}\"\n" ++
   s!"llmApiKey = {apiKey}\n" ++
   s!"systemPrompt = \"{config.systemPrompt}\"\n" ++
   s!"embeddingModelPath = {bertPath}\n" ++
   s!"timeoutMs = {timeout}\n" ++
-  s!"debug = {if config.debug then "true" else "false"}\n"
+  s!"debug = {if config.debug then "true" else "false"}\n" ++
+  s!"policies = \"{policiesStr}\"\n"
 
 /-- 設定ファイルを保存する -/
 def saveConfig (path : System.FilePath) (config : AppConfig) : IO (Except AppError Unit) := do

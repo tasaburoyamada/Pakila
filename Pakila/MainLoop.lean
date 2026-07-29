@@ -8,6 +8,7 @@ import Pakila.CLI.Theme
 import Pakila.CLI.Renderer
 import Pakila.Protocol.Types
 import Pakila.CLI.SlashCommands
+import Pakila.CLI.RewindUI
 import Pakila.Governance.VlogParser
 
 open Pakila
@@ -39,9 +40,14 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
           IO.println "Exiting..."
           return
         else if cmd.name == "rewind" then
-          let nextS := { s with history := s.history.drop 2 }
-          IO.println "[System]: Rewound 1 turn."
-          runLoop (maxTurns - 1) config nextS dispatcher categories
+          match ← Pakila.CLI.RewindUI.runRewindBrowser s.configDir with
+          | some _ =>
+              let nextS := { s with history := s.history.drop 2 }
+              IO.println "[System]: Rewound 1 turn."
+              runLoop (maxTurns - 1) config nextS dispatcher categories
+          | none =>
+              IO.println "[System]: Rewind cancelled."
+              runLoop (maxTurns - 1) config s dispatcher categories
         else if cmd.name == "model" then
           let args := parsedCmd.args
           if args.length > 0 then

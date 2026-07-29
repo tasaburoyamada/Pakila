@@ -157,7 +157,7 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
       configDir := currentConfigDir,
       activeLlm := selectedLlm,
       activeModelName := selectedModelName,
-      policies := runArgs.policies
+      policies := config.policies ++ runArgs.policies
     }
     let initialInput := match runArgs.prompt with | some p => some p | none => if runArgs.query.isEmpty then none else some (String.intercalate " " runArgs.query)
 
