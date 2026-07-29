@@ -1,0 +1,19 @@
+2026-07-30T00:04:09+09:00
+
+## 指示内容
+
+`architectural-auditor`（アーキテクチャ監査スキル）に基づく Pakila への機能実装指示。
+
+## 実施した実装内容（ブランチ: feature/architectural-auditor）
+
+1. **VlogNode 拡張 (`Lyceum/Governance/Vlog.lean`)**:
+   - `@LIFELINE[sourceTarget]`: 文化表現・文脈グラデーションの生存確認。単なる統計的記号へのすり替わりを防止。
+   - `@CONTRACT[traitSemantics]`: 意味論的約束（抑揚・間・深み）の契約履行監査。ダミー成功や表面的な語尾変更を禁止。
+   - `@BOUNDS[limitsFallback]`: 確率最尤値（無難な平均解）への逃避を抑圧し、非平均エントロピーとロングテール出力を制御。
+
+2. **VlogParser.lean 拡張**:
+   - `parseDataLifeline`, `parseContractIntegrity`, `parsePhysicalBoundary` パーサーを追加。
+   - `formatVlogState` に `[Architectural Auditor Mandate]` プロンプト生成出力を追加。
+
+3. **PromptManager.lean 規範強化**:
+   - システムプロンプトに `[Architectural Auditor Mandate]`（データの生存確認・契約の整合性・物理的境界制御）を注入。

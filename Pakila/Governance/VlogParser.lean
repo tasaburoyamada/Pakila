@@ -260,8 +260,29 @@ def parseTimelinePhase : Parser VlogNode := do
       else if k == "ACCUM" then e := v
   return .TimelinePhase s e
 
+/-- @LIFELINE[target] のパース -/
+def parseDataLifeline : Parser VlogNode := do
+  let _ ← pstring "@LIFELINE["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .DataLifeline content.trimAscii.toString
+
+/-- @CONTRACT[semantics] のパース -/
+def parseContractIntegrity : Parser VlogNode := do
+  let _ ← pstring "@CONTRACT["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .ContractIntegrity content.trimAscii.toString
+
+/-- @BOUNDS[limits] のパース -/
+def parsePhysicalBoundary : Parser VlogNode := do
+  let _ ← pstring "@BOUNDS["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .PhysicalBoundary content.trimAscii.toString
+
 def vlogNodeParser : Parser VlogNode :=
-  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna <|> parseIrreversible <|> parseExpectationGap <|> parseConflictTradeoff <|> parseNarrativePerspective <|> parseSanctuary <|> parseFriction <|> parseLogicalCrush <|> parseIrreversibleStain <|> parseCoreValue <|> parseIdiolect <|> parseInformationBoundary <|> parseTimelinePhase
+  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna <|> parseIrreversible <|> parseExpectationGap <|> parseConflictTradeoff <|> parseNarrativePerspective <|> parseSanctuary <|> parseFriction <|> parseLogicalCrush <|> parseIrreversibleStain <|> parseCoreValue <|> parseIdiolect <|> parseInformationBoundary <|> parseTimelinePhase <|> parseDataLifeline <|> parseContractIntegrity <|> parsePhysicalBoundary
 
 /-- 個別の行をパースして VlogNode を生成する。 -/
 def parseVlogLine (line : String) : Option VlogNode :=
@@ -281,7 +302,7 @@ def parseVlogString (input : String) : Except String (List VlogNode) :=
 def formatVlogState (nodes : List VlogNode) : String :=
   if nodes.isEmpty then ""
   else
-    let header := "## [HV-CAD Vector-State Injection & Character Architecture Framework]\n"
+    let header := "## [HV-CAD Vector-State Injection & Architectural Auditor Mandate]\n"
     nodes.foldl (fun acc node =>
       match node with
       | .Ctx d s g => acc ++ s!"- Context: Domain={d}, Sub={s}, Goal={g}\n"
@@ -306,6 +327,9 @@ def formatVlogState (nodes : List VlogNode) : String :=
       | .Idiolect t h => acc ++ s!"- [CHARACTER IDIOLECT & PERSONA]: Persona tone '{t}', speech habit '{h}'. Maintain inviolable voice identity.\n"
       | .InformationBoundary k u => acc ++ s!"- [INFORMATION BOUNDARY / ASYMMETRY]: Known facts '{k}', Blindspots/Unknowns '{u}'. Strictly prohibit meta-knowledge leakage.\n"
       | .TimelinePhase s e => acc ++ s!"- [TIMELINE & EXPERIENCE STAGE]: Growth stage '{s}', Accumulated experience '{e}'. Reflect depth of losses & gains.\n"
+      | .DataLifeline d => acc ++ s!"- [DATA LIFELINE INTEGRITY]: Ensure unbroken physical context & linguistic consistency across: {d}\n"
+      | .ContractIntegrity c => acc ++ s!"- [CONTRACT INTEGRITY AUDIT]: Fulfill exact semantic promise without empty fallbacks or silent swallows for: {c}\n"
+      | .PhysicalBoundary p => acc ++ s!"- [PHYSICAL BOUNDARY CONTROL]: Enforce non-averaging entropy, rate limits, and fallback bounds for: {p}\n"
     ) header
 
 /-- メッセージの先頭に .vlog ステートを注入する -/
