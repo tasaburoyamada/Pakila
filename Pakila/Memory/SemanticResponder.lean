@@ -55,4 +55,23 @@ def SemanticResponder.respond (self : SemanticResponder) (input : String) : IO (
           return .ok "ごめんなさい、その質問の意図を正確に理解できませんでした。物理エンジンの演算範囲外です。"
   | .error e => return .error e
 
+/--
+文脈強度（Context Intensity）に基づく動的 LlmRequestOptions の選定。
+入力ベクトルのノルムや特徴に応じて、高密度モード (Low Temperature) と
+余白・文化モード (High Temperature & Soft Sampling) を動的に切り替える。
+-/
+def SemanticResponder.determineContextOptions
+    (self : SemanticResponder) (input : String) : IO (Option Lyceum.LlmRequestOptions) := do
+  match ← self.model.embed_impl input with
+  | .ok queryVec =>
+      -- 埋め込みベクトルの各要素の分散・強度を算出し、入力文脈の密度を判定
+      let sumSq := queryVec.data.foldl (fun acc v => acc + (v * v)) 0.0
+      if sumSq > 0.8 then
+        -- 具象的・高密度の要求 → 低温度で決定論的な出力 (Focus Mode)
+        return some { temperature := some 0.2, topP := some 0.85, maxTokens := none }
+      else
+        -- 概念的・行間を含む要求 → 高温度・柔軟なサンプリング (Slack / Cultural Mode)
+        return some { temperature := some 0.8, topP := some 0.95, maxTokens := none }
+  | .error _ => return none
+
 end Pakila.Memory

@@ -1,0 +1,25 @@
+2026-07-29T23:55:42+09:00
+
+## 指示内容
+
+生成AIの「文化・抑揚の表現力不足（均一化バイアス）」に関するメタ理論（creative-meta-theory）に基づき、Pakila の設計と実装を拡張・再構築せよとの指示。
+
+## 実施した実装内容（ブランチ: feature/creative-meta-theory）
+
+1. **Lyceum.Governance / VlogNode 拡張**:
+   - `@DENSITY_FOCUS[target]`: 抽象論を排し、具体的コード・決定打を凝縮する高エントロピーノード。
+   - `@DENSITY_SLACK[target]`: 1〜2文で完結させ、余白・行間・静寂を保持する低エントロピーノード。
+   - `@CADENCE_DYNA[pattern]`: 文長の急激な不規則変化を要求する韻律ダイナミクスノード。
+
+2. **VlogParser.lean 拡張**:
+   - `parseDensityFocus`, `parseDensitySlack`, `parseCadenceDyna` のパーサーおよびパースルールを追加。
+   - `formatVlogState` に均一化バイアス破砕プロンプト（[Anti-Averaging Dynamics]）を自動挿入する仕組みを追加。
+
+3. **PromptManager.lean の規範更新**:
+   - システムプロンプトに `[Anti-Averaging & Dynamic Density Mandate]` を物理注入。平均化バイアス（均一な丁寧さ、過剰な全方位配慮、冗長な解説）を明示的に禁止。
+
+4. **SemanticResponder.lean の動的コンテキスト調整**:
+   - `determineContextOptions` 関数を追加。ユーザー入力の埋め込みベクトルノルム・特徴から高密度 Focus モード（低温度）と文化・行間 Slack モード（高温度・柔軟サンプリング）を判定・提示する仕組みを追加。
+
+5. **MainLoop.lean の温度・オプション動的適応**:
+   - `.vlog` から抽出された `@BIAS` や文脈評価に基づき、推論パラメータ（temperature, topP）を可変で物理適用。

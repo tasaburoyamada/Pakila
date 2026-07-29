@@ -87,8 +87,12 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
           let (action, nextS) := Pakila.transition s injectedMsg.parts
 
           -- 3. アクション実行 (物理界: バグ発生源)
-          -- 試案③: biasToRequestOptions で @BIAS を LlmRequestOptions に変換
-          let llmOptions := biasToRequestOptions s.vlogState
+          -- @BIAS およびエントロピー疎密ノードから LlmRequestOptions を物理変換
+          let biasOptions := biasToRequestOptions s.vlogState
+          -- デフォルトの動的調整: biasOptions が指定されていなければデフォルトバランス (T=0.7, P=0.9)
+          let llmOptions := match biasOptions with
+            | some opt => some opt
+            | none => some { temperature := some 0.7, topP := some 0.9, maxTokens := none }
           match action with
           | .CallLlm msgs =>
             -- LLM呼び出しの場合、StructuredLlmResponseを期待

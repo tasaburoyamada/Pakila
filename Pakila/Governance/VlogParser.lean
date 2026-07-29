@@ -91,8 +91,30 @@ def parseConcept : Parser VlogNode := do
   if tokens.isEmpty then fail "No concepts found"
   return .Concept tokens
 
+/-- @DENSITY_FOCUS[target] のパース -/
+def parseDensityFocus : Parser VlogNode := do
+  let _ ← pstring "@DENSITY_FOCUS["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .DensityFocus content.trimAscii.toString
+
+/-- @DENSITY_SLACK[target] のパース -/
+def parseDensitySlack : Parser VlogNode := do
+  let _ ← pstring "@DENSITY_SLACK["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .DensitySlack content.trimAscii.toString
+
+/-- @CADENCE_DYNA[10,120,8] のパース -/
+def parseCadenceDyna : Parser VlogNode := do
+  let _ ← pstring "@CADENCE_DYNA["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  let nums := content.splitOn "," |>.filterMap (fun s => s.trimAscii.toString.toNat?)
+  return .CadenceDyna nums
+
 def vlogNodeParser : Parser VlogNode :=
-  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept
+  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna
 
 /-- 個別の行をパースして VlogNode を生成する。 -/
 def parseVlogLine (line : String) : Option VlogNode :=
@@ -112,7 +134,7 @@ def parseVlogString (input : String) : Except String (List VlogNode) :=
 def formatVlogState (nodes : List VlogNode) : String :=
   if nodes.isEmpty then ""
   else
-    let header := "## [HV-CAD Vector-State Injection]\n"
+    let header := "## [HV-CAD Vector-State Injection & Anti-Averaging Dynamics]\n"
     nodes.foldl (fun acc node =>
       match node with
       | .Ctx d s g => acc ++ s!"- Context: Domain={d}, Sub={s}, Goal={g}\n"
@@ -122,6 +144,9 @@ def formatVlogState (nodes : List VlogNode) : String :=
       | .ShiftMinus t => acc ++ s!"- Suppressed Constraint: {t}\n"
       | .ShiftMandatory t => acc ++ s!"- Mandatory Constraint: {t}\n"
       | .Concept ts => acc ++ s!"- Active Concepts: {ts}\n"
+      | .DensityFocus t => acc ++ s!"- [HIGH-DENSITY FOCUS]: Eliminate generalities/filler. Concentrate exact facts & structure on: {t}\n"
+      | .DensitySlack t => acc ++ s!"- [LOW-DENSITY SLACK]: State concisely in 1-2 sentences. Retain spatial/cultural silence on: {t}\n"
+      | .CadenceDyna pat => acc ++ s!"- [CADENCE RHYTHM DYNAMICS]: Vary sentence lengths sharply according to sequence [{String.intercalate ", " (pat.map toString)}]\n"
     ) header
 
 /-- メッセージの先頭に .vlog ステートを注入する -/
