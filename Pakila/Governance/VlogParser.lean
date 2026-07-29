@@ -177,8 +177,36 @@ def parseNarrativePerspective : Parser VlogNode := do
       else if k == "TONE" then t := v
   return .NarrativePerspective r t
 
+/-- @SANCTUARY[target] のパース -/
+def parseSanctuary : Parser VlogNode := do
+  let _ ← pstring "@SANCTUARY["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .Sanctuary content.trimAscii.toString
+
+/-- @FRICTION[conflict] のパース -/
+def parseFriction : Parser VlogNode := do
+  let _ ← pstring "@FRICTION["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .Friction content.trimAscii.toString
+
+/-- @LOGICAL_CRUSH[logic] のパース -/
+def parseLogicalCrush : Parser VlogNode := do
+  let _ ← pstring "@LOGICAL_CRUSH["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .LogicalCrush content.trimAscii.toString
+
+/-- @STAIN[stain] のパース -/
+def parseIrreversibleStain : Parser VlogNode := do
+  let _ ← pstring "@STAIN["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .IrreversibleStain content.trimAscii.toString
+
 def vlogNodeParser : Parser VlogNode :=
-  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna <|> parseIrreversible <|> parseExpectationGap <|> parseConflictTradeoff <|> parseNarrativePerspective
+  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna <|> parseIrreversible <|> parseExpectationGap <|> parseConflictTradeoff <|> parseNarrativePerspective <|> parseSanctuary <|> parseFriction <|> parseLogicalCrush <|> parseIrreversibleStain
 
 /-- 個別の行をパースして VlogNode を生成する。 -/
 def parseVlogLine (line : String) : Option VlogNode :=
@@ -198,7 +226,7 @@ def parseVlogString (input : String) : Except String (List VlogNode) :=
 def formatVlogState (nodes : List VlogNode) : String :=
   if nodes.isEmpty then ""
   else
-    let header := "## [HV-CAD Vector-State Injection & Narrative Dynamics Mandate]\n"
+    let header := "## [HV-CAD Vector-State Injection & Virtue Deconstruction Framework]\n"
     nodes.foldl (fun acc node =>
       match node with
       | .Ctx d s g => acc ++ s!"- Context: Domain={d}, Sub={s}, Goal={g}\n"
@@ -215,6 +243,10 @@ def formatVlogState (nodes : List VlogNode) : String :=
       | .ExpectationGap p r => acc ++ s!"- [EXPECTATION GAP / SUBVERSION]: Undermine user's implicit prediction '{p}' with logical reality '{r}'.\n"
       | .ConflictTradeoff a b => acc ++ s!"- [GENUINE CONFLICT TRADEOFF]: Enforce unavoidable choice between '{a}' vs '{b}'. Both must entail severe cost.\n"
       | .NarrativePerspective r t => acc ++ s!"- [NARRATIVE PERSPECTIVE & TONE]: Adopt narrator role '{r}' with tone '{t}'.\n"
+      | .Sanctuary v => acc ++ s!"- [STEP 1 SANCTUARY]: Build highly sophisticated, unyielding moral/idealistic sanctuary around: {v}\n"
+      | .Friction c => acc ++ s!"- [STEP 2 FRICTION]: Depict fierce internal conflict between the unyielding principle and: {c}\n"
+      | .LogicalCrush l => acc ++ s!"- [STEP 3 LOGICAL CRUSH]: Deconstruct the virtue through rigorous, inescapable logic of: {l}\n"
+      | .IrreversibleStain s => acc ++ s!"- [STEP 4 IRREVERSIBLE STAIN]: Depict the enduring spiritual stain and dark aesthetic where the entity observes its own ruined virtue: {s}\n"
     ) header
 
 /-- メッセージの先頭に .vlog ステートを注入する -/

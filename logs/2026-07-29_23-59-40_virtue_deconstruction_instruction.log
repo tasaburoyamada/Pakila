@@ -1,0 +1,20 @@
+2026-07-29T23:59:40+09:00
+
+## 指示内容
+
+`virtue-deconstruction`（規範解体と背徳美学スキル）に基づく Pakila への機能実装指示。
+
+## 実施した実装内容（ブランチ: feature/virtue-deconstruction）
+
+1. **VlogNode 拡張 (`Lyceum/Governance/Vlog.lean`)**:
+   - `@SANCTUARY[target]`: 打ち砕くに足る強固で硬質な正義・美学の構築を指示。
+   - `@FRICTION[conflict]`: 規範と現実に挟まれた誠実な内面的摩擦を描写指示。
+   - `@LOGICAL_CRUSH[logic]`: 理不尽な不運ではなく逃れられない論理の帰結として規範を解体。
+   - `@STAIN[stain]`: 汚されつつも理想を捨てきれずに歪む精神の美・不可逆な傷痕を定着。
+
+2. **VlogParser.lean 拡張**:
+   - `parseSanctuary`, `parseFriction`, `parseLogicalCrush`, `parseIrreversibleStain` パーサーを追加。
+   - `formatVlogState` に `[Virtue Deconstruction Framework]` プロンプト生成出力を追加。
+
+3. **PromptManager.lean 規範強化**:
+   - システムプロンプトに `[Virtue Deconstruction Mandate]`（擬似背徳の廃止、聖域の硬化、可視化された葛藤、論理的粉砕、不可逆な傷痕）を注入。
