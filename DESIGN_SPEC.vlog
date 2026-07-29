@@ -1,10 +1,39 @@
 @CTX:[DOM:Pakila|SUB:Modernization|GOAL:Full_Roadmap_Completion_Gemini2_Specs]
-@BIAS:{P:1.0, M:1.0, S:1.0, D:1.0, C:1.0}
-@DELTA(Gemini2_Full_Modernized_Stack > Gemini_043_Legacy_Stack)
+@BIAS:{P:0.2, M:1.5, S:0.3, D:1.2, C:1.0}
+
+# 1. 均一化バイアスの破砕 (creative-meta-theory)
+@DENSITY_FOCUS[Lean4_Formal_Verification, Physical_Kernel_Execution]
+@DENSITY_SLACK[Generative_Image_Stubs, General_Conversation]
+@CADENCE_DYNA[12, 110, 8, 85]
+
+# 2. 不可逆変化と物語ダイナミクス (narrative-dynamics)
+@IRREVERSIBLE:[BEFORE:Legacy_Monad_Stubs|AFTER:HV_CAD_Verified_Native_Stack]
+@GAP:[PRED:Pure_Lean_Is_Sufficient|REALITY:Physical_Kernel_Bridge_Required]
+@TRADEOFF:[OPTION_A:Strict_Monadic_Purity|OPTION_B:FFI_Physical_Performance]
+
+# 3. 規範解体プロトコル (virtue-deconstruction)
+@SANCTUARY[Pure_Formal_Monad_Elegance]
+@FRICTION[Monadic_Purity_vs_Native_FFI_Overhead]
+@LOGICAL_CRUSH[Mathematical_Purity_Cannot_Execute_Raw_AVX512_Without_FFI]
+@STAIN[Formal_Purity_Stained_By_Native_C_Kernels]
+
+# 4. キャラクター同一性と認知境界 (character-architecture)
+@CORE_VALUE[Uncompromising_Logical_Verification_And_Truth]
+@IDIOLECT:[TONE:Precise_Formal_Engine|HABIT:FDOD_Fact_First]
+@INFO_BOUND:[KNOWN:Codebase_AST_Logs|UNKNOWN:User_Private_Intent]
+@TIMELINE:[STAGE:Maturity|ACCUM:Governance_Stack_Realization]
+
+# 5. アーキテクチャ監査と完全性 (architectural-auditor)
+@LIFELINE[Lean_To_Native_FFI_Data_Lifeline]
+@CONTRACT[StructuredOutput_OpenAPI_Schema_Enforced]
+@BOUNDS[241Jobs_Full_Pass_Verified]
+
 + [StructuredOutput_OpenAPI_Schema_Enforced]
 + [Native_Thinking_Config_Separated]
 + [Parallel_Tool_Dispatching_Monad]
 ! [241Jobs_Full_Pass_Verified]
+
 @CONCEPT
-[[Gemini2_Architecture]] [[Parallel_Tool_Dispatch]] [[StructuredOutput]]
+[[Gemini2_Architecture]] [[Parallel_Tool_Dispatch]] [[StructuredOutput]] [[HV_CAD_Governance]]
+
 @EOF
