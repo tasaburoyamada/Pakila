@@ -34,6 +34,6 @@ def handleReadFile (cont : Continuation IO) (config : AppConfig) (client : LlmIn
   let result := String.intercalate "\n" sliced
   let toolMsg : Message := { role := .tool, parts := [.toolResponse "read_file" result] }
   let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
-  cont.runLoop nextS
+  cont.runLoop finalS
 
 end Pakila

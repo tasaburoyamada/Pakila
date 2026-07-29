@@ -28,7 +28,8 @@ def handleBash (cont : Continuation IO) (config : AppConfig) (client : LlmInstan
 
   | Except.error e =>
       TerminalEnv.println (applyColor .red s!"✖  Policy Violation: {repr e}")
-      cont.runLoop nextS
+      let toolMsg : Message := { role := .tool, parts := [.toolResponse "execute_bash" s!"Policy Violation: {repr e}"] }
+      cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
   | Except.ok _ =>
       let proceed ← if s.skipTrust then pure true else Prompts.yesNo s!"Execute bash command: {cmd}?"
       if proceed then
@@ -60,6 +61,7 @@ def handleBash (cont : Continuation IO) (config : AppConfig) (client : LlmInstan
             cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
       else
         TerminalEnv.println (applyColor .white "▶ BASH: Skipped by user")
-        cont.runLoop nextS
+        let toolMsg : Message := { role := .tool, parts := [.toolResponse "execute_bash" "Execution skipped by user"] }
+        cont.runLoop { nextS with history := nextS.history ++ [toolMsg] }
 
 end Pakila.Actions
