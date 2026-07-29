@@ -14,9 +14,11 @@ open Pakila.Core.Delegator
 
 namespace Pakila
 
-/-- エージェント（サブプロセス）を呼び出すスタブ実装 -/
+/-- エージェント（サブプロセス）を呼び出す本実装 -/
 def invokeAgent (req : AgentRequest) : IO (Except String String) := do
-  pure (.ok s!"Agent {(toString (repr req.type))} finished task.")
+  match ← Pakila.Core.Delegator.invokeAgent req with
+  | .ok res => pure (.ok res)
+  | .error e => pure (.error s!"{e}")
 
 /-- エージェント委譲アクションを処理する -/
 def handleInvokeAgent (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (req : AgentRequest) : IO Unit := do

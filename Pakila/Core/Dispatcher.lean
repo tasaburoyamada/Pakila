@@ -60,13 +60,24 @@ def dispatch (cont : Continuation IO) (config : AppConfig) (client : LlmInstance
   | _ =>
       cont.runLoop nextS
 
-/-- Gemini 2.0 Concurrent/Parallel Tool Calls の一括並列ディスパッチ -/
+/-- Gemini 2.0 Concurrent/Parallel Tool Calls の一括ディスパッチ -/
 def dispatchBatch (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (actions : List MachineAction) : IO Unit := do
   match actions with
   | [] => cont.runLoop nextS
   | [singleAction] => dispatch cont config client modelName s nextS singleAction
-  | firstAction :: restActions =>
-      TerminalEnv.println s!"[Parallel Dispatcher: Executing {actions.length} tool calls in sequence/parallel]"
-      dispatch cont config client modelName s nextS firstAction
+  | _ =>
+      TerminalEnv.println s!"[Parallel Dispatcher: Executing {actions.length} tool calls sequentially]"
+      -- 全アクションをチェーンして実行する。各アクションが完了後に次のアクションへ継続する。
+      let rec runAll (remaining : List MachineAction) (currentS : InterpreterState) : IO Unit := do
+        match remaining with
+        | [] => cont.runLoop currentS
+        | action :: rest =>
+            -- 各アクションのための中間 Continuation を作成し、次アクションへ繋ぐ
+            let innerCont : Continuation IO := {
+              runLoop := fun updatedS => runAll rest updatedS
+              stepAction := fun a innerS => dispatch { runLoop := fun us => runAll rest us, stepAction := cont.stepAction } config client modelName innerS innerS a
+            }
+            dispatch innerCont config client modelName s currentS action
+      runAll actions nextS
 
 end Pakila.Actions
