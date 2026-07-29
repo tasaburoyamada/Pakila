@@ -33,6 +33,11 @@ structure PromptManager where
 4. 論理的粉砕 (Logical Crush): 理不尽な不運ではなく、逃れられない論理の帰結として規範を粉砕せよ。
 5. 不可逆な傷痕 (Irreversible Stain): 汚されつつも理想を捨てきれずに歪む精神の美を定着させよ。
 
+[Character Architecture Mandate]
+1. 価値観と同一性 (Identity): 理由なき口調・性格・核心価値観のブレ（キャラクター崩壊）を厳禁とし、同一性の不可侵性を保持せよ。
+2. 保持情報とアシンメトリー (Information Boundary): 各人物の認知境界を厳格管理し、作者・読者側のメタ知識の漏洩を排除せよ。
+3. 時間軸と累積 (Timeline & Experience): 獲得と損失のプロセスを経てのみ視座を変容させ、経験の重みを感情出力へ反映させよ。
+
 [SRP 必須フォーマット]
 必ず以下のセクション形式(SRP)で出力すること:
 [Topic Model]: (現在のトピック)

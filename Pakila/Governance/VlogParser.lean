@@ -205,8 +205,63 @@ def parseIrreversibleStain : Parser VlogNode := do
   let _ ← pchar ']'
   return .IrreversibleStain content.trimAscii.toString
 
+/-- @CORE_VALUE[target] のパース -/
+def parseCoreValue : Parser VlogNode := do
+  let _ ← pstring "@CORE_VALUE["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  return .CoreValue content.trimAscii.toString
+
+/-- @IDIOLECT:[TONE:t|HABIT:h] のパース -/
+def parseIdiolect : Parser VlogNode := do
+  let _ ← pstring "@IDIOLECT:["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  let parts := content.splitOn "|"
+  let mut t := ""; let mut h := ""
+  for part in parts do
+    let kv := part.splitOn ":"
+    if kv.length == 2 then
+      let k := kv[0]!.trimAscii.toString
+      let v := kv[1]!.trimAscii.toString
+      if k == "TONE" then t := v
+      else if k == "HABIT" then h := v
+  return .Idiolect t h
+
+/-- @INFO_BOUND:[KNOWN:k|UNKNOWN:u] のパース -/
+def parseInformationBoundary : Parser VlogNode := do
+  let _ ← pstring "@INFO_BOUND:["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  let parts := content.splitOn "|"
+  let mut kStr := ""; let mut uStr := ""
+  for part in parts do
+    let kv := part.splitOn ":"
+    if kv.length == 2 then
+      let k := kv[0]!.trimAscii.toString
+      let v := kv[1]!.trimAscii.toString
+      if k == "KNOWN" then kStr := v
+      else if k == "UNKNOWN" then uStr := v
+  return .InformationBoundary kStr uStr
+
+/-- @TIMELINE:[STAGE:s|ACCUM:e] のパース -/
+def parseTimelinePhase : Parser VlogNode := do
+  let _ ← pstring "@TIMELINE:["
+  let content ← manyChars (satisfy (· ≠ ']'))
+  let _ ← pchar ']'
+  let parts := content.splitOn "|"
+  let mut s := ""; let mut e := ""
+  for part in parts do
+    let kv := part.splitOn ":"
+    if kv.length == 2 then
+      let k := kv[0]!.trimAscii.toString
+      let v := kv[1]!.trimAscii.toString
+      if k == "STAGE" then s := v
+      else if k == "ACCUM" then e := v
+  return .TimelinePhase s e
+
 def vlogNodeParser : Parser VlogNode :=
-  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna <|> parseIrreversible <|> parseExpectationGap <|> parseConflictTradeoff <|> parseNarrativePerspective <|> parseSanctuary <|> parseFriction <|> parseLogicalCrush <|> parseIrreversibleStain
+  parseCtx <|> parseBias <|> parseDelta <|> parseShift <|> parseConcept <|> parseDensityFocus <|> parseDensitySlack <|> parseCadenceDyna <|> parseIrreversible <|> parseExpectationGap <|> parseConflictTradeoff <|> parseNarrativePerspective <|> parseSanctuary <|> parseFriction <|> parseLogicalCrush <|> parseIrreversibleStain <|> parseCoreValue <|> parseIdiolect <|> parseInformationBoundary <|> parseTimelinePhase
 
 /-- 個別の行をパースして VlogNode を生成する。 -/
 def parseVlogLine (line : String) : Option VlogNode :=
@@ -226,7 +281,7 @@ def parseVlogString (input : String) : Except String (List VlogNode) :=
 def formatVlogState (nodes : List VlogNode) : String :=
   if nodes.isEmpty then ""
   else
-    let header := "## [HV-CAD Vector-State Injection & Virtue Deconstruction Framework]\n"
+    let header := "## [HV-CAD Vector-State Injection & Character Architecture Framework]\n"
     nodes.foldl (fun acc node =>
       match node with
       | .Ctx d s g => acc ++ s!"- Context: Domain={d}, Sub={s}, Goal={g}\n"
@@ -247,6 +302,10 @@ def formatVlogState (nodes : List VlogNode) : String :=
       | .Friction c => acc ++ s!"- [STEP 2 FRICTION]: Depict fierce internal conflict between the unyielding principle and: {c}\n"
       | .LogicalCrush l => acc ++ s!"- [STEP 3 LOGICAL CRUSH]: Deconstruct the virtue through rigorous, inescapable logic of: {l}\n"
       | .IrreversibleStain s => acc ++ s!"- [STEP 4 IRREVERSIBLE STAIN]: Depict the enduring spiritual stain and dark aesthetic where the entity observes its own ruined virtue: {s}\n"
+      | .CoreValue p => acc ++ s!"- [CHARACTER CORE VALUE]: Unyielding core identity & choice principle: {p}. DO NOT drift or alter without explicit narrative cause.\n"
+      | .Idiolect t h => acc ++ s!"- [CHARACTER IDIOLECT & PERSONA]: Persona tone '{t}', speech habit '{h}'. Maintain inviolable voice identity.\n"
+      | .InformationBoundary k u => acc ++ s!"- [INFORMATION BOUNDARY / ASYMMETRY]: Known facts '{k}', Blindspots/Unknowns '{u}'. Strictly prohibit meta-knowledge leakage.\n"
+      | .TimelinePhase s e => acc ++ s!"- [TIMELINE & EXPERIENCE STAGE]: Growth stage '{s}', Accumulated experience '{e}'. Reflect depth of losses & gains.\n"
     ) header
 
 /-- メッセージの先頭に .vlog ステートを注入する -/

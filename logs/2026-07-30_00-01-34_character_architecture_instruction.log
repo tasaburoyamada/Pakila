@@ -1,0 +1,20 @@
+2026-07-30T00:01:34+09:00
+
+## 指示内容
+
+`character-architecture`（キャラクター造形フレームワーク）に基づく Pakila への機能実装指示。
+
+## 実施した実装内容（ブランチ: feature/character-architecture）
+
+1. **VlogNode 拡張 (`Lyceum/Governance/Vlog.lean`)**:
+   - `@CORE_VALUE[identityPrinciple]`: キャラクターの魂・譲れない価値観および口調・同一性の固定を指示。
+   - `@IDIOLECT:[TONE:t|HABIT:h]`: ペルソナのトーン・口癖・固有の言語習慣の保持を指示。
+   - `@INFO_BOUND:[KNOWN:k|UNKNOWN:u]`: 認知境界・情報のアシンメトリー管理。メタ知識の漏洩を物理排除。
+   - `@TIMELINE:[STAGE:s|ACCUM:e]`: 時間軸（獲得と損失のプロセス）による視座変容段階を指示。
+
+2. **VlogParser.lean 拡張**:
+   - `parseCoreValue`, `parseIdiolect`, `parseInformationBoundary`, `parseTimelinePhase` パーサーを追加。
+   - `formatVlogState` に `[Character Architecture Framework]` プロンプト生成出力を追加。
+
+3. **PromptManager.lean 規範強化**:
+   - システムプロンプトに `[Character Architecture Mandate]`（同一性の不可侵・認知境界・時間軸累積）を注入。
