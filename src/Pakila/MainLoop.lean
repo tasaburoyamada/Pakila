@@ -3,11 +3,16 @@ import Pakila.Core.Machine
 import Pakila.Core.State
 import Pakila.Core.Interpreter
 import Pakila.Core.Dispatcher
+import Pakila.Core.Summarizer
 import Pakila.CLI.Terminal
 import Pakila.CLI.Theme
 import Pakila.CLI.Renderer
 import Pakila.Protocol.Types
 import Pakila.CLI.SlashCommands
+import Pakila.CLI.MemoryUI
+import Pakila.CLI.Exporter
+import Pakila.CLI.SettingsUI
+import Pakila.Governance.SkillManager
 
 open Pakila
 open Pakila.Protocol
@@ -15,6 +20,17 @@ open Lyceum
 open Lean hiding Message
 
 namespace Pakila
+
+/-- 履歴が長くなった場合に自動要約を行うヘルパー -/
+def checkAndSummarizeState (s : InterpreterState) : IO InterpreterState := do
+  if s.history.length >= 20 then
+    match ← Core.Summarizer.summarizeHistory s.activeLlm s.history with
+    | .ok summaryMsg =>
+        let sysMsg := s.history.headD (Lyceum.Message.mkText .system "")
+        pure { s with history := [sysMsg, summaryMsg] }
+    | .error _ => pure s
+  else
+    pure s
 
 /-- 形式検証可能なステートマシンループ -/
 partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState) (dispatcher : Dispatcher) (categories : List (String × List (String × LlmInstance))) : IO Unit := do
@@ -40,6 +56,19 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
         else if cmd.name == "rewind" then
           let nextS := { s with history := s.history.take (s.history.length - 2) }
           IO.println "[System]: Rewound 1 turn."
+          runLoop (maxTurns - 1) config nextS dispatcher categories
+        else if cmd.name == "memory" then
+          Pakila.CLI.MemoryUI.runMemoryManager s.configDir s.configDir
+          runLoop (maxTurns - 1) config s dispatcher categories
+        else if cmd.name == "config" then
+          let newConfig ← Pakila.CLI.SettingsUI.runSettingsEditor config
+          runLoop (maxTurns - 1) newConfig s dispatcher categories
+        else if cmd.name == "clear" then
+          TerminalEnv.print "\x1b[2J\x1b[H"
+          runLoop (maxTurns - 1) config s dispatcher categories
+        else if cmd.name == "reset" then
+          let nextS := { s with history := s.history.take 1 }
+          IO.println "[System]: Session reset."
           runLoop (maxTurns - 1) config nextS dispatcher categories
         else if cmd.name == "model" then
           let args := parsedCmd.args
@@ -89,18 +118,21 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
                       Pakila.renderAiResponse structuredResponse.response
                       let feedbackMsg : Lyceum.Message := { role := .assistant, parts := [.text structuredResponse.response] }
                       let nextSWithFeedback := { nextSWithToolOutput with history := nextSWithToolOutput.history ++ [feedbackMsg] }
-                      runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
+                      let finalS ← checkAndSummarizeState nextSWithFeedback
+                      runLoop (maxTurns - 1) config finalS dispatcher categories
                     | Except.error e =>
                       Pakila.renderSystemOutput s!"Bash command failed: {e}"
                       TerminalEnv.println (applyColor .red s!"[Error]: Bash command execution failed: {e}")
                       let feedbackMsg : Lyceum.Message := { role := .tool, parts := [.text s!"Bash command failed: {e}"] }
                       let nextSWithFeedback := { nextS with history := nextS.history ++ [feedbackMsg] }
-                      runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
+                      let finalS ← checkAndSummarizeState nextSWithFeedback
+                      runLoop (maxTurns - 1) config finalS dispatcher categories
                   else -- Bashアクションがなかった場合
                     Pakila.renderAiResponse structuredResponse.response
                     let feedbackMsg : Lyceum.Message := { role := .assistant, parts := [.text structuredResponse.response] }
                     let nextSWithFeedback := { nextS with history := nextS.history ++ [feedbackMsg] }
-                    runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
+                    let finalS ← checkAndSummarizeState nextSWithFeedback
+                    runLoop (maxTurns - 1) config finalS dispatcher categories
                 | .error e =>
                   TerminalEnv.println (applyColor .red s!"[Error]: Failed to parse structured LLM response: {e}")
                   runLoop (maxTurns - 1) config nextS dispatcher categories
@@ -121,11 +153,13 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
                 let role := match action with | .CallLlm _ => Lyceum.Role.assistant | _ => Lyceum.Role.tool
                 let feedbackMsg : Lyceum.Message := { role := role, parts := [.text out] }
                 let nextSWithFeedback := { nextS with history := nextS.history ++ [feedbackMsg] }
-                runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
+                let finalS ← checkAndSummarizeState nextSWithFeedback
+                runLoop (maxTurns - 1) config finalS dispatcher categories
             | Except.error e =>
                 TerminalEnv.println (applyColor .red s!"[Error]: Action failed: {e}")
                 let feedbackMsg : Lyceum.Message := { role := .tool, parts := [.text s!"Error: {e}"] }
                 let nextSWithFeedback := { nextS with history := nextS.history ++ [feedbackMsg] }
-                runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
+                let finalS ← checkAndSummarizeState nextSWithFeedback
+                runLoop (maxTurns - 1) config finalS dispatcher categories
 
 end Pakila
