@@ -25,8 +25,9 @@ def handleGovernanceAction (action : GovernanceAction) : IO (Except AppError Str
       else
         pure (.ok "Integrity Check Passed.")
   | .SelfHeal =>
-      -- ここに自己修復ロジックを実装
-      pure (.ok "Self-healing procedures executed.")
+      let defaultHealer : Pakila.Governance.SelfHealer := {}
+      let (_, msg) := Pakila.Governance.healPrompt defaultHealer "System anomaly detected"
+      pure (.ok s!"Self-healing procedure executed: {msg.content}")
   | .CheckEngine =>
       pure (.ok "Physical engine diagnostics passed.")
 
