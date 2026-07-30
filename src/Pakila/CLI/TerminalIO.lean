@@ -46,7 +46,26 @@ instance : TerminalEnv IO where
       IO.println s!"[Environment] Browser failed. Please open manually: {url}"
       return false
 
-  getTerminalSize := do IO.println "[System]: getTerminalSize not supported."; return (80, 24) -- ダミー値
+  getTerminalSize := do
+    let colsOpt ← IO.getEnv "COLUMNS"
+    let linesOpt ← IO.getEnv "LINES"
+    match (colsOpt, linesOpt) with
+    | (some c, some l) =>
+        let cols := c.toNat?.getD 80
+        let lines := l.toNat?.getD 24
+        return (cols, lines)
+    | _ =>
+        try
+          let out ← IO.Process.run { cmd := "stty", args := #["size"] }
+          let parts := out.trimAscii.toString.splitOn " "
+          if parts.length >= 2 then
+            let lines := parts[0]!.toNat?.getD 24
+            let cols := parts[1]!.toNat?.getD 80
+            return (cols, lines)
+          else
+            return (80, 24)
+        catch _ =>
+          return (80, 24)
 
   loadHistory path := do
     let historyPath := path / "pakila_history"

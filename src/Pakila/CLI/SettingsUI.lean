@@ -16,8 +16,9 @@ namespace Pakila.CLI.SettingsUI
 
 /-- 設定の対話的エディタ -/
 partial def runSettingsEditor (config : AppConfig) : IO AppConfig := do
+  let (termCols, _) ← TerminalEnv.getTerminalSize
   let details := s!"1. LLM Model:  {config.llmModel}\n2. API URL:    {config.llmApiUrl}\n3. API Key:    {if config.llmApiKey.isSome then "********" else "(None)"}\n4. Debug Mode: {config.debug}"
-  TerminalEnv.println (renderCardBox "Pakila Settings Editor" details)
+  TerminalEnv.println (renderCardBox "Pakila Settings Editor" details (termWidth := termCols))
   
   let choice ← selectOption "Select item to edit (0-4):" ["Exit", "LLM Model", "API URL", "API Key", "Debug Mode"]
   match choice with

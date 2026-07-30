@@ -34,15 +34,16 @@ partial def runMemoryManager (workspaceRoot : System.FilePath) (configDir : Syst
       TerminalEnv.println "Select source to view:"
       let sources := ["Global", "Workspace"] ++ ctx.scopedCtxs.map (fun (p, _) => s!"Scoped ({p})") ++ ["Private"]
       let sIdx ← selectOption "Source:" sources
+      let (termCols, _) ← TerminalEnv.getTerminalSize
       match sIdx with
-      | some 0 => TerminalEnv.println (renderCardBox "Global Context" ctx.globalCtx)
-      | some 1 => TerminalEnv.println (renderCardBox "Workspace Context" ctx.workspaceCtx)
+      | some 0 => TerminalEnv.println (renderCardBox "Global Context" ctx.globalCtx (termWidth := termCols))
+      | some 1 => TerminalEnv.println (renderCardBox "Workspace Context" ctx.workspaceCtx (termWidth := termCols))
       | some i => 
           if i >= 2 && i - 2 < ctx.scopedCtxs.length then
             let (path, content) := ctx.scopedCtxs[i - 2]!
-            TerminalEnv.println (renderCardBox s!"Scoped Context ({path})" content)
+            TerminalEnv.println (renderCardBox s!"Scoped Context ({path})" content (termWidth := termCols))
           else
-            TerminalEnv.println (renderCardBox "Private Memory" ctx.memoryCtx)
+            TerminalEnv.println (renderCardBox "Private Memory" ctx.memoryCtx (termWidth := termCols))
       | none => pure ()
       runMemoryManager workspaceRoot configDir
   | _ => runMemoryManager workspaceRoot configDir

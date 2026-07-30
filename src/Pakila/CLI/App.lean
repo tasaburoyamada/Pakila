@@ -76,11 +76,12 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
   let subcommand ← match parseCliArgs args with
     | Except.ok res => pure res
     | Except.error e =>
+        let (termCols, _) ← TerminalEnv.getTerminalSize
         let (errTitle, errMsg, sug, sim) := match e with
           | AppError.ConfigError msg => ("Configuration Error", msg, some "設定ファイル (~/.config/pakila/config.toml) または引数オプションの形式を確認してください。", ["config", "run --help"])
           | AppError.LlmError msg => ("LLM Interface Error", msg, some "PAKILA_API_KEY 環境変数または config.toml の llmApiKey を確認してください。", ["config"])
           | _ => ("CLI Parsing Error", repr e |> toString, some "有効なサブコマンドまたはフラグを指定してください。", ["--help", "run", "config", "skills", "mcp"])
-        TerminalEnv.println (renderErrorBox errTitle errMsg sug sim)
+        TerminalEnv.println (renderErrorBox errTitle errMsg sug sim (termWidth := termCols))
         return
 
 

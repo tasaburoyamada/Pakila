@@ -43,21 +43,24 @@ def renderNoticeBox (text : String) : String := Id.run do
   ) ""
   return top ++ "\n" ++ middle ++ bottom
 
-/-- 汎用グラフィカル・カードビュー描画 (2-C) -/
-def renderCardBox (title : String) (body : String) (color : Color := ProfessionalColors.cyan) : String := Id.run do
+/-- 汎用グラフィカル・カードビュー描画 (2-C) - 端末幅への動的適応付き -/
+def renderCardBox (title : String) (body : String) (color : Color := ProfessionalColors.cyan) (termWidth : Nat := 80) : String := Id.run do
+  let maxBoxWidth := max 40 (min termWidth 120)
   let lines := body.splitOn "\n"
-  let contentWidth := lines.foldl (fun acc l => max acc l.length) title.length + 4
-  let topBar := "╭─ " ++ title ++ " " ++ String.intercalate "" (List.replicate (max 0 (contentWidth - title.length - 3)) "─") ++ "╮"
-  let bottomBar := "╰" ++ String.intercalate "" (List.replicate (contentWidth + 1) "─") ++ "╯"
+  let maxContentLen := lines.foldl (fun acc l => max acc l.length) title.length
+  let contentWidth := min (maxBoxWidth - 4) (max maxContentLen title.length)
+  let topBar := "╭─ " ++ title ++ " " ++ String.intercalate "" (List.replicate (max 0 (contentWidth - title.length)) "─") ++ "╮"
+  let bottomBar := "╰" ++ String.intercalate "" (List.replicate (contentWidth + 4) "─") ++ "╯"
   let middle := lines.foldl (fun acc l =>
-    let padLen := max 0 (contentWidth - l.length - 1)
+    let trimmedLine := if l.length > contentWidth then (l.take (contentWidth - 3)).toString ++ "..." else l
+    let padLen := max 0 (contentWidth - trimmedLine.length + 2)
     let padding := String.intercalate "" (List.replicate padLen " ")
-    acc ++ applyColor color "│" ++ " " ++ l ++ padding ++ applyColor color "│" ++ "\n"
+    acc ++ applyColor color "│" ++ " " ++ trimmedLine ++ padding ++ applyColor color "│" ++ "\n"
   ) ""
   return applyColor color topBar ++ "\n" ++ middle ++ applyColor color bottomBar
 
 /-- エラー表示用カード（1-A, 1-B 構造化エラー・サジェスチョン・ヒント統合） -/
-def renderErrorBox (errTitle : String) (errMsg : String) (suggestion : Option String := none) (similarCmds : List String := []) : String := Id.run do
+def renderErrorBox (errTitle : String) (errMsg : String) (suggestion : Option String := none) (similarCmds : List String := []) (termWidth : Nat := 80) : String := Id.run do
   let mut content := errMsg
   if let some sug := suggestion then
     content := content ++ "\n\n" ++ applyBold (applyColor Color.yellow "💡 解決のヒント:") ++ "\n  " ++ sug
@@ -65,7 +68,7 @@ def renderErrorBox (errTitle : String) (errMsg : String) (suggestion : Option St
     content := content ++ "\n\n" ++ applyBold (applyColor Color.cyan "🔍 もしかして:") ++ "\n"
     for cmd in similarCmds do
       content := content ++ s!"  • pakila {cmd}\n"
-  return renderCardBox s!"ERROR: {errTitle}" content Color.red
+  return renderCardBox s!"ERROR: {errTitle}" content Color.red termWidth
 
 /-- プロフェッショナルなマークダウンレンダラー -/
 def renderMarkdown (text : String) : String := Id.run do

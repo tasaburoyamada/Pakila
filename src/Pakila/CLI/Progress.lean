@@ -15,11 +15,12 @@ structure ProgressBar where
   label : String
 deriving Repr
 
-/-- 決定論的プログレスバーレンダラー (3-A 拡張) -/
-def ProgressBar.render (pb : ProgressBar) : String :=
+/-- 決定論的プログレスバーレンダラー (3-A 拡張) - 端末幅動的適応 -/
+def ProgressBar.render (pb : ProgressBar) (termWidth : Nat := 80) : String :=
   let percentage := if pb.total == 0 then 0 else (pb.current * 100) / pb.total
-  let filled := if pb.total == 0 then 0 else (pb.current * 20) / pb.total
-  let bar := applyColor Color.cyan (replicate filled '█') ++ applyColor ProfessionalColors.gray (replicate (20 - filled) '░')
+  let barWidth := max 10 (min 30 (termWidth / 4))
+  let filled := if pb.total == 0 then 0 else (pb.current * barWidth) / pb.total
+  let bar := applyColor Color.cyan (replicate filled '█') ++ applyColor ProfessionalColors.gray (replicate (barWidth - filled) '░')
   s!"{pb.label} [{bar}] {percentage}%"
 
 def ProgressBar.update (pb : ProgressBar) (newCurrent : Nat) : ProgressBar :=
@@ -33,16 +34,17 @@ def getSpinnerFrame (step : Nat) : String :=
   let idx := step % spinnerFrames.size
   applyColor Color.yellow (spinnerFrames.getD idx "⠋")
 
-/-- リッチステータスバー・オーバーレイレンダラー (3-C) -/
+/-- リッチステータスバー・オーバーレイレンダラー (3-C) - 端末幅動的適応 -/
 structure StatusOverlay where
   activeTask : String
   memoryUsageMb : Nat := 0
   activeModel : String := "Gemini"
 deriving Repr
 
-def StatusOverlay.render (status : StatusOverlay) : String :=
+def StatusOverlay.render (status : StatusOverlay) (termWidth : Nat := 80) : String :=
   let content := s!" [ Task: {status.activeTask} | Model: {status.activeModel} | Mem: {status.memoryUsageMb}MB ] "
-  let bar := applyColor ProfessionalColors.gray (replicate (max 0 (80 - content.length)) "─")
+  let barLen := max 0 (termWidth - content.length)
+  let bar := applyColor ProfessionalColors.gray (replicate barLen "─")
   applyColor Color.cyan content ++ bar
 
 end Pakila
