@@ -14,7 +14,7 @@ open Pakila.Protocol
 namespace Pakila
 
 /-- スキルアクティベーションアクションを処理する -/
-def handleActivateSkill (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (name : String) : IO Unit := do
+def handleActivateSkill (cont : Continuation IO) (nextS : InterpreterState) (name : String) : IO Unit := do
   TerminalEnv.print (applyColor .cyan s!"▶ SKILL: Activating '{name}'...\n")
   -- 暫定的に SkillManager.loadSkill が未実装/非互換の場合に備え、直接ファイルを読み込む
   let path := System.FilePath.mk s!"tools/skills/{name}.md"
@@ -24,11 +24,11 @@ def handleActivateSkill (cont : Continuation IO) (config : AppConfig) (client : 
     let toolMsg : Message := { role := .tool, parts := [.toolResponse "activate_skill" content] }
     TerminalEnv.print (applyColor .green s!"✔  Skill '{name}' activated.\n")
     let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
-    cont.runLoop nextS
+    cont.runLoop finalS
   catch e =>
     TerminalEnv.print (applyColor .red s!"✖  Skill Activation Failed: {e}\n")
     let toolMsg : Message := { role := .tool, parts := [.toolResponse "activate_skill" s!"Error: {e}"] }
     let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
-    cont.runLoop nextS
+    cont.runLoop finalS
 
 end Pakila

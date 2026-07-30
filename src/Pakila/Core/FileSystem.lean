@@ -13,18 +13,18 @@ open Pakila.Protocol
 namespace Pakila
 
 /-- ファイル書き込みアクションを処理する -/
-def handleWriteFile (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (path : String) (content : String) : IO Unit := do
+def handleWriteFile (cont : Continuation IO) (s : InterpreterState) (nextS : InterpreterState) (path : String) (content : String) : IO Unit := do
   TerminalEnv.print (applyColor .cyan s!"▶ WRITE: Writing {path}...\n")
   TerminalEnv.writeFile (System.FilePath.mk path) content
   let toolMsg : Message := { role := .tool, parts := [.toolResponse "write_file" "Success"] }
   let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
   if s.skipTrust then 
-    cont.runLoop nextS
+    cont.runLoop finalS
   else 
-    cont.runLoop nextS
+    cont.runLoop finalS
 
 /-- ファイル読み込みアクションを処理する -/
-def handleReadFile (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (path : String) (start : Option Nat) (endL : Option Nat) : IO Unit := do
+def handleReadFile (cont : Continuation IO) (nextS : InterpreterState) (path : String) (start : Option Nat) (endL : Option Nat) : IO Unit := do
   TerminalEnv.print (applyColor .cyan s!"▶ READ: Reading {path}...\n")
   let content ← TerminalEnv.readFile (System.FilePath.mk path)
   let lines := content.splitOn "\n"
@@ -34,6 +34,6 @@ def handleReadFile (cont : Continuation IO) (config : AppConfig) (client : LlmIn
   let result := String.intercalate "\n" sliced
   let toolMsg : Message := { role := .tool, parts := [.toolResponse "read_file" result] }
   let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
-  cont.runLoop nextS
+  cont.runLoop finalS
 
 end Pakila

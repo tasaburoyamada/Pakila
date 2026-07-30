@@ -18,7 +18,7 @@ open Lyceum.Core.Environment
 namespace Pakila
 
 /-- 物理アクションの実行層: バグはこの関数にのみ集約される -/
-def runAction (action : MachineAction) (dispatcher : Dispatcher) (activeLlm : LlmInstance) [TerminalEnv IO] : IO (Except String String) := do
+def runAction (action : MachineAction) (_dispatcher : Dispatcher) (activeLlm : LlmInstance) [TerminalEnv IO] : IO (Except String String) := do
   match action with
   | .Quit => pure (Except.ok "Quit")
   | .CallLlm msgs => do

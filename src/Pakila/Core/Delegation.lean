@@ -19,7 +19,7 @@ def invokeAgent (req : AgentRequest) : IO (Except String String) := do
   pure (.ok s!"Agent {(toString (repr req.type))} finished task.")
 
 /-- エージェント委譲アクションを処理する -/
-def handleInvokeAgent (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (req : AgentRequest) : IO Unit := do
+def handleInvokeAgent (cont : Continuation IO) (nextS : InterpreterState) (req : AgentRequest) : IO Unit := do
   TerminalEnv.print (applyColor .cyan s!"▶ DELEGATE: Invoking {(toString (repr req.type))}...\n")
   match (← invokeAgent req) with
   | .ok res =>

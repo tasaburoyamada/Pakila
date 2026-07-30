@@ -23,7 +23,7 @@ open Lyceum.Protocol
 namespace Pakila.Actions
 
 /-- Bash アクションを処理する -/
-def handleBash (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (cmd : String) : IO Unit := do
+def handleBash (cont : Continuation IO) (s : InterpreterState) (nextS : InterpreterState) (cmd : String) : IO Unit := do
   match enforcePolicies s (MachineAction.ExecuteBash cmd) with
 
   | Except.error e =>

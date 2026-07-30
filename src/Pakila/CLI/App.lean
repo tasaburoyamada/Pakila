@@ -125,7 +125,7 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
       match (← selectModelFlat categories) with
       | some res => pure res
       | none =>
-          if h : !categories.isEmpty && !categories[0]!.2.isEmpty then
+          if !categories.isEmpty && !categories[0]!.2.isEmpty then
             pure categories[0]!.2[0]!
           else
             pure ("", .remote remoteClient)
@@ -135,7 +135,7 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
   match subcommand with
   | .run runArgs =>
     let dbPath := currentConfigDir / s!".pakila/sessions/{runArgs.session.getD "current"}/vector_db.json"
-    let initialDb ← match (← Lyceum.Memory.VectorDB.load dbPath.toString) with | Except.ok db => pure db | Except.error e => pure ∅
+    let initialDb ← match (← Lyceum.Memory.VectorDB.load dbPath.toString) with | Except.ok db => pure db | Except.error _ => pure ∅
 
     let mut embModel := none
     let bertPath ← expandPath (config.embeddingModelPath.getD "models/bert.gguf")

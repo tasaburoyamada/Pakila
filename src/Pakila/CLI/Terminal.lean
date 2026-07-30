@@ -23,7 +23,7 @@ deriving instance Inhabited for IO.FS.DirEntry
 /-- カスタムReadLineの実装 (汎用版) -/
 def readLineWithHistory {m : Type → Type} [Monad m] [TerminalEnv m] [MonadFinally m] [MonadLiftT IO m] (prompt : String) (configDir : System.FilePath) : m (Option String) := do
   -- 履歴をロード
-  let history ← loadHistory configDir
+  let _ ← loadHistory configDir
 
   -- プロンプトを表示
   TerminalEnv.print prompt

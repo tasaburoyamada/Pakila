@@ -19,36 +19,36 @@ open Lyceum.Protocol
 namespace Pakila.Actions
 
 /-- テスト実行アクションを処理する -/
-def handleRunTest (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (testCommand : String) : IO Unit := do
+def handleRunTest (cont : Continuation IO) (nextS : InterpreterState) (testCommand : String) : IO Unit := do
   TerminalEnv.println s!"Executing test command: {testCommand}"
   let updatedS := { nextS with history := nextS.history ++ [{ role := .tool, parts := [.toolResponse "run_test" "Test command executed successfully."] }] }
   cont.runLoop updatedS
 
 /-- アクションディスパッチャーの統合インターフェース -/
-def dispatch (cont : Continuation IO) (config : AppConfig) (client : LlmInstance) (modelName : String) (s : InterpreterState) (nextS : InterpreterState) (action : MachineAction) : IO Unit := do
+def dispatch (cont : Continuation IO) (_config : AppConfig) (_client : LlmInstance) (_modelName : String) (s : InterpreterState) (nextS : InterpreterState) (action : MachineAction) : IO Unit := do
 
   match action with
   | .ExecuteBash cmd =>
-      handleBash cont config client modelName s nextS cmd
+      handleBash cont s nextS cmd
   | .ActivateSkill name =>
-      handleActivateSkill cont config client modelName s nextS name
+      handleActivateSkill cont nextS name
   | .WriteFile path content =>
-      handleWriteFile cont config client modelName s nextS path content
+      handleWriteFile cont s nextS path content
   | .ReadFile path start endL =>
-      handleReadFile cont config client modelName s nextS path start endL
+      handleReadFile cont nextS path start endL
   | .EditImage file prompt =>
-      handleEditImage cont config client modelName s nextS file prompt
+      handleEditImage cont nextS file prompt
   | .RestoreImage file prompt =>
-      handleRestoreImage cont config client modelName s nextS file prompt
+      handleRestoreImage cont nextS file prompt
   | .GenerateIcon prompt sizes =>
-      handleGenerateIcon cont config client modelName s nextS prompt sizes
+      handleGenerateIcon cont nextS prompt sizes
   | .GenerateDiagram prompt t =>
-      handleGenerateDiagram cont config client modelName s nextS prompt t
+      handleGenerateDiagram cont nextS prompt t
   | .InvokeAgent req =>
       let agentReq : Pakila.Core.Delegator.AgentRequest := { type := .generalist, prompt := req, context := [] }
-      handleInvokeAgent cont config client modelName s nextS agentReq
+      handleInvokeAgent cont nextS agentReq
   | .RunTest testCommand =>
-      handleRunTest cont config client modelName s nextS testCommand
+      handleRunTest cont nextS testCommand
   | .Governance g =>
       match (← handleGovernanceAction g) with
       | .ok msg =>
@@ -65,7 +65,7 @@ def dispatchBatch (cont : Continuation IO) (config : AppConfig) (client : LlmIns
   match actions with
   | [] => cont.runLoop nextS
   | [singleAction] => dispatch cont config client modelName s nextS singleAction
-  | firstAction :: restActions =>
+  | firstAction :: _ =>
       TerminalEnv.println s!"[Parallel Dispatcher: Executing {actions.length} tool calls in sequence/parallel]"
       dispatch cont config client modelName s nextS firstAction
 

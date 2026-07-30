@@ -66,7 +66,7 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
 
           -- 3. アクション実行 (物理界: バグ発生源)
           match action with
-          | .CallLlm msgs =>
+          | .CallLlm _ =>
             -- LLM呼び出しの場合、StructuredLlmResponseを期待
             match ← Pakila.runAction action dispatcher s.activeLlm with
             | Except.ok jsonStr =>
