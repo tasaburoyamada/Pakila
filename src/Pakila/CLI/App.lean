@@ -130,26 +130,18 @@ def run (args : List String) [TerminalEnv IO] : IO Unit := do
           else
             pure ("", .remote remoteClient)
 
-  if selectedModelName.isEmpty then return
+  let selectedModelName := if selectedModelName.isEmpty then "default" else selectedModelName
 
   match subcommand with
   | .run runArgs =>
     let dbPath := currentConfigDir / s!".pakila/sessions/{runArgs.session.getD "current"}/vector_db.json"
     let initialDb ← match (← Lyceum.Memory.VectorDB.load dbPath.toString) with | Except.ok db => pure db | Except.error _ => pure ∅
 
-    let mut embModel := none
-    let bertPath ← expandPath (config.embeddingModelPath.getD "models/bert.gguf")
-    if ← TerminalEnv.pathExists bertPath then
-      -- match (← Lyceum.Memory.initNativeEmbedding bertPath.toString) with
-      -- | Except.ok m => embModel := some m
-      -- | Except.error _ => pure ()
-      pure ()
-
     let initialState : InterpreterState := {
       history := [Message.mkText .system fullSystemPrompt],
       vectorDb := initialDb,
       vlogState := [],
-      embeddingModel := embModel,
+      embeddingModel := none,
       sessionId := runArgs.session.getD "current",
       interactive := runArgs.prompt.isNone && runArgs.query.isEmpty,
       executionMode := if runArgs.prompt.isSome || !runArgs.query.isEmpty then .Batch else .Interactive,

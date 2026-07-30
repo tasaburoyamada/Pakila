@@ -13,15 +13,12 @@ open Pakila.Protocol
 namespace Pakila
 
 /-- ファイル書き込みアクションを処理する -/
-def handleWriteFile (cont : Continuation IO) (s : InterpreterState) (nextS : InterpreterState) (path : String) (content : String) : IO Unit := do
+def handleWriteFile (cont : Continuation IO) (nextS : InterpreterState) (path : String) (content : String) : IO Unit := do
   TerminalEnv.print (applyColor .cyan s!"▶ WRITE: Writing {path}...\n")
   TerminalEnv.writeFile (System.FilePath.mk path) content
   let toolMsg : Message := { role := .tool, parts := [.toolResponse "write_file" "Success"] }
   let finalS : InterpreterState := { nextS with history := nextS.history ++ [toolMsg] }
-  if s.skipTrust then 
-    cont.runLoop finalS
-  else 
-    cont.runLoop finalS
+  cont.runLoop finalS
 
 /-- ファイル読み込みアクションを処理する -/
 def handleReadFile (cont : Continuation IO) (nextS : InterpreterState) (path : String) (start : Option Nat) (endL : Option Nat) : IO Unit := do

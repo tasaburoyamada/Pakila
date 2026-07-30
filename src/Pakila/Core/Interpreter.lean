@@ -10,15 +10,19 @@ import Pakila.Core.Primitives
 import Lean.Data.Json
 import Lyceum.Core.Environment
 
+import Pakila.Plugins.Dispatcher
+import Pakila.Plugins.Sandbox
+
 open Lyceum.Protocol -- New open statement
 open Pakila.Protocol -- Added open
 open Lean.Json
 open Lyceum.Core.Environment
+open Lyceum
 
 namespace Pakila
 
 /-- 物理アクションの実行層: バグはこの関数にのみ集約される -/
-def runAction (action : MachineAction) (_dispatcher : Dispatcher) (activeLlm : LlmInstance) [TerminalEnv IO] : IO (Except String String) := do
+def runAction (action : MachineAction) (dispatcher : Dispatcher) (activeLlm : LlmInstance) [TerminalEnv IO] : IO (Except String String) := do
   match action with
   | .Quit => pure (Except.ok "Quit")
   | .CallLlm msgs => do
@@ -29,11 +33,17 @@ def runAction (action : MachineAction) (_dispatcher : Dispatcher) (activeLlm : L
           pure (Except.ok (toString (Lean.toJson structuredResponse))) -- Return JSON string
       | Except.error e => pure (Except.error s!"LLM Error: {repr e}")
   | .ExecuteBash cmd => 
-      -- Bash 実行は IO
-      let engine : BashEngine := { cwd := ".", env := [] }
-      match ← Pakila.executeBash engine cmd with
-      | Except.ok out => pure (Except.ok out)
-      | Except.error e => pure (Except.error s!"Bash error: {repr e}")
+      if dispatcher.useSandbox then
+        match Lyceum.ExecutionEngine.prepare dispatcher.sandboxEngine cmd "bash" with
+        | Except.ok prepAction => 
+            match ← Pakila.executeSandbox dispatcher.sandboxEngine prepAction with
+            | Except.ok out => pure (Except.ok out)
+            | Except.error e => pure (Except.error s!"Sandbox error: {repr e}")
+        | Except.error e => pure (Except.error s!"Prepare sandbox error: {repr e}")
+      else
+        match ← Pakila.executeBash dispatcher.bashEngine cmd with
+        | Except.ok out => pure (Except.ok out)
+        | Except.error e => pure (Except.error s!"Bash error: {repr e}")
   | .WriteFile path content =>
       -- ファイル操作は IO
       TerminalEnv.writeFile (System.FilePath.mk path) content

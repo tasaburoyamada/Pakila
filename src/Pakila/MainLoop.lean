@@ -38,7 +38,7 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
           IO.println "Exiting..."
           return
         else if cmd.name == "rewind" then
-          let nextS := { s with history := s.history.drop 2 }
+          let nextS := { s with history := s.history.take (s.history.length - 2) }
           IO.println "[System]: Rewound 1 turn."
           runLoop (maxTurns - 1) config nextS dispatcher categories
         else if cmd.name == "model" then
@@ -85,21 +85,21 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
                     | Except.ok bashOutput =>
                       Pakila.renderSystemOutput bashOutput
                       let toolMsg : Lyceum.Message := { role := .tool, parts := [.text bashOutput] }
-                      let nextSWithToolOutput := { nextS with history := toolMsg :: nextS.history }
+                      let nextSWithToolOutput := { nextS with history := nextS.history ++ [toolMsg] }
                       Pakila.renderAiResponse structuredResponse.response
                       let feedbackMsg : Lyceum.Message := { role := .assistant, parts := [.text structuredResponse.response] }
-                      let nextSWithFeedback := { nextSWithToolOutput with history := feedbackMsg :: nextSWithToolOutput.history }
+                      let nextSWithFeedback := { nextSWithToolOutput with history := nextSWithToolOutput.history ++ [feedbackMsg] }
                       runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
                     | Except.error e =>
                       Pakila.renderSystemOutput s!"Bash command failed: {e}"
                       TerminalEnv.println (applyColor .red s!"[Error]: Bash command execution failed: {e}")
                       let feedbackMsg : Lyceum.Message := { role := .tool, parts := [.text s!"Bash command failed: {e}"] }
-                      let nextSWithFeedback := { nextS with history := feedbackMsg :: nextS.history }
+                      let nextSWithFeedback := { nextS with history := nextS.history ++ [feedbackMsg] }
                       runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
                   else -- Bashアクションがなかった場合
                     Pakila.renderAiResponse structuredResponse.response
                     let feedbackMsg : Lyceum.Message := { role := .assistant, parts := [.text structuredResponse.response] }
-                    let nextSWithFeedback := { nextS with history := feedbackMsg :: nextS.history }
+                    let nextSWithFeedback := { nextS with history := nextS.history ++ [feedbackMsg] }
                     runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
                 | .error e =>
                   TerminalEnv.println (applyColor .red s!"[Error]: Failed to parse structured LLM response: {e}")
@@ -120,12 +120,12 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
                 Pakila.renderSystemOutput out
                 let role := match action with | .CallLlm _ => Lyceum.Role.assistant | _ => Lyceum.Role.tool
                 let feedbackMsg : Lyceum.Message := { role := role, parts := [.text out] }
-                let nextSWithFeedback := { nextS with history := feedbackMsg :: nextS.history }
+                let nextSWithFeedback := { nextS with history := nextS.history ++ [feedbackMsg] }
                 runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
             | Except.error e =>
                 TerminalEnv.println (applyColor .red s!"[Error]: Action failed: {e}")
                 let feedbackMsg : Lyceum.Message := { role := .tool, parts := [.text s!"Error: {e}"] }
-                let nextSWithFeedback := { nextS with history := feedbackMsg :: nextS.history }
+                let nextSWithFeedback := { nextS with history := nextS.history ++ [feedbackMsg] }
                 runLoop (maxTurns - 1) config nextSWithFeedback dispatcher categories
 
 end Pakila

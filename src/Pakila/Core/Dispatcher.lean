@@ -33,7 +33,7 @@ def dispatch (cont : Continuation IO) (_config : AppConfig) (_client : LlmInstan
   | .ActivateSkill name =>
       handleActivateSkill cont nextS name
   | .WriteFile path content =>
-      handleWriteFile cont s nextS path content
+      handleWriteFile cont nextS path content
   | .ReadFile path start endL =>
       handleReadFile cont nextS path start endL
   | .EditImage file prompt =>

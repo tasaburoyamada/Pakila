@@ -22,15 +22,15 @@ def transition (s : InterpreterState) (parts : List Lyceum.MessagePart) : Machin
     (MachineAction.RunTest testCommand, s)
   else
     let userMsg : Lyceum.Message := { role := .user, parts := parts }
-    let nextS := { s with history := userMsg :: s.history, turnCount := s.turnCount + 1 }
+    let nextS := { s with history := s.history ++ [userMsg], turnCount := s.turnCount + 1 }
     
     match userMsg.role with
     | .assistant => 
         let rawText := userMsg.parts.foldl (fun acc p => match p with | .text t => acc ++ t | _ => acc) ""
         match parseActionFromText rawText with
         | some action => (action, nextS)
-        | none => (MachineAction.CallLlm nextS.history.reverse, nextS)
+        | none => (MachineAction.CallLlm nextS.history, nextS)
     | _ => 
-        (MachineAction.CallLlm nextS.history.reverse, nextS)
+        (MachineAction.CallLlm nextS.history, nextS)
 
 end Pakila

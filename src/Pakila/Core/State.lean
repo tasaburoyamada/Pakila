@@ -43,5 +43,5 @@ deriving Inhabited, BEq
 /-- 実行結果を受け取り、次のループへ遷移する継続インターフェース -/
 structure Continuation (m : Type → Type) where
   runLoop : InterpreterState → m Unit
-  stepAction : Pakila.Protocol.MachineAction → InterpreterState → m Unit
+
 end Pakila

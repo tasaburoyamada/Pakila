@@ -13,9 +13,9 @@ echo "▶ Running Acceptance Test: $SCENARIO_FILE"
 
 # シナリオの入力をパイプで渡し、期待される出力を検証する
 # ここでは簡易的に「/help」を実行して、特定のキーワードが出るか確認する
-output=$(echo -e "/help\n/exit" | $PAKILA_BIN -p "")
+output=$(echo -e "/help\n/exit" | $PAKILA_BIN)
 
-if echo "$output" | grep -q "Pakila Help"; then
+if echo "$output" | grep -q "ヘルプを表示する"; then
   echo "✔ Acceptance Test Passed: Help menu displayed."
 else
   echo "✖ Acceptance Test Failed: Help menu not found."
