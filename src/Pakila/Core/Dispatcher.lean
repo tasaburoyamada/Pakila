@@ -12,6 +12,8 @@ import Pakila.Core.Memory
 import Pakila.Core.Skills
 import Pakila.Core.State
 
+import Pakila.Plugins.VisionTool
+
 open Lyceum
 open Pakila
 open Lyceum.Protocol

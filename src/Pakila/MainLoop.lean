@@ -14,6 +14,8 @@ import Pakila.CLI.Exporter
 import Pakila.CLI.SettingsUI
 import Pakila.Governance.SkillManager
 
+import Pakila.Core.Persistence
+
 open Pakila
 open Pakila.Protocol
 open Lyceum
@@ -21,13 +23,16 @@ open Lean hiding Message
 
 namespace Pakila
 
-/-- 履歴が長くなった場合に自動要約を行うヘルパー -/
+/-- 履歴が長くなった場合に自動要約を行い、セッション状態を原子的に保存するヘルパー -/
 def checkAndSummarizeState (s : InterpreterState) : IO InterpreterState := do
+  saveSession s
   if s.history.length >= 20 then
     match ← Core.Summarizer.summarizeHistory s.activeLlm s.history with
     | .ok summaryMsg =>
         let sysMsg := s.history.headD (Lyceum.Message.mkText .system "")
-        pure { s with history := [sysMsg, summaryMsg] }
+        let updated := { s with history := [sysMsg, summaryMsg] }
+        saveSession updated
+        pure updated
     | .error _ => pure s
   else
     pure s

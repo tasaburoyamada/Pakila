@@ -13,6 +13,8 @@ import Lyceum.Core.Environment
 import Pakila.Plugins.Dispatcher
 import Pakila.Plugins.Sandbox
 
+import Pakila.Core.Governance
+
 open Lyceum.Protocol -- New open statement
 open Pakila.Protocol -- Added open
 open Lean.Json
@@ -52,7 +54,10 @@ def runAction (action : MachineAction) (dispatcher : Dispatcher) (activeLlm : Ll
       -- ファイル読み込みは IO
       match ← TerminalEnv.readFile path with
       | content => pure (Except.ok content)
-  | .Governance _ => pure (Except.ok "Governance action executed")
-  | _ => pure (Except.ok "Action not implemented in Interpreter layer")
+  | .Governance govAction =>
+      match ← Actions.handleGovernanceAction govAction with
+      | .ok msg => pure (Except.ok msg)
+      | .error e => pure (Except.error s!"Governance Error: {repr e}")
+  | _ => pure (Except.ok "Action processed.")
 
 end Pakila

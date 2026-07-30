@@ -33,6 +33,7 @@ def handleGovernanceAction (action : GovernanceAction) : IO (Except AppError Str
   | .VerifyIntegrity =>
       pure (.ok "Integrity verified.")
   | .ShowSettings =>
-      pure (.ok "Settings: (TODO)")
+      let sysInfo ← getSystemInfo
+      pure (.ok s!"System Configuration & Diagnostics:\n{formatSystemInfo sysInfo}")
 
 end Pakila.Actions
