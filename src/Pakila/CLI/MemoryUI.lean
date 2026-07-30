@@ -27,7 +27,7 @@ partial def runMemoryManager (workspaceRoot : System.FilePath) (configDir : Syst
     TerminalEnv.println s!"  [S] Scoped: {path}/GEMINI.md"
   if !ctx.memoryCtx.isEmpty then TerminalEnv.println "  [M] Private: MEMORY.md"
   
-  let choice ← selectOption "Memory Action:" ["Exit", "View Content", "Edit (Placeholder)", "Sync All"]
+  let choice ← selectOption "Memory Action:" ["Exit", "View Content", "Edit Context File", "Sync All"]
   match choice with
   | some 0 | none => return ()
   | some 1 => 
@@ -45,6 +45,19 @@ partial def runMemoryManager (workspaceRoot : System.FilePath) (configDir : Syst
           else
             TerminalEnv.println (renderCardBox "Private Memory" ctx.memoryCtx (termWidth := termCols))
       | none => pure ()
+      runMemoryManager workspaceRoot configDir
+  | some 2 =>
+      TerminalEnv.println "Select source to edit:"
+      let sources := ["Global (GEMINI.md)", "Workspace (GEMINI.md)", "Private (MEMORY.md)"]
+      let sIdx ← selectOption "Target File:" sources
+      let targetPath := match sIdx with
+        | some 0 => configDir / "GEMINI.md"
+        | some 1 => workspaceRoot / "GEMINI.md"
+        | _ => workspaceRoot / "MEMORY.md"
+      TerminalEnv.println s!"Opening editor for: {targetPath}"
+      let editorOpt ← TerminalEnv.getEnv "EDITOR"
+      let editor := editorOpt.getD "nano"
+      let _ ← TerminalEnv.runProcess { cmd := editor, args := #[targetPath.toString] }
       runMemoryManager workspaceRoot configDir
   | _ => runMemoryManager workspaceRoot configDir
 

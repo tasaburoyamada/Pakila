@@ -15,9 +15,10 @@ deriving Inhabited
 /-- 利用可能なスラッシュコマンドの一覧 -/
 def availableSlashCommands : List SlashCommand := [
   { name := "model",    description := "LLMモデルを切り替える", template := "/model " },
-  { name := "rewind",   description := "過去の状態へ巻き戻す", template := "/rewind" },
+  { name := "rewind",   description := "過去の状態へ対話的に巻き戻す (Rewind TUI)", template := "/rewind" },
   { name := "config",   description := "設定を編集する", template := "/config" },
   { name := "memory",   description := "メモリ管理UIを起動する", template := "/memory" },
+  { name := "export",   description := "対話履歴をMarkdownファイルへ出力する", template := "/export " },
   { name := "help",     description := "ヘルプを表示する", template := "/help" },
   { name := "clear",    description := "画面をクリアする", template := "/clear" },
   { name := "reset",    description := "セッションをリセットする", template := "/reset" },

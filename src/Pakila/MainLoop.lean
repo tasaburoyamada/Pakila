@@ -12,6 +12,7 @@ import Pakila.CLI.SlashCommands
 import Pakila.CLI.MemoryUI
 import Pakila.CLI.Exporter
 import Pakila.CLI.SettingsUI
+import Pakila.CLI.RewindUI
 import Pakila.Governance.SkillManager
 
 import Pakila.Core.Persistence
@@ -58,9 +59,28 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
           IO.println "Exiting..."
           return
         else if cmd.name == "rewind" then
-          let nextS := { s with history := s.history.take (s.history.length - 2) }
-          IO.println "[System]: Rewound 1 turn."
-          runLoop (maxTurns - 1) config nextS dispatcher categories
+          match ← Pakila.CLI.RewindUI.runRewindBrowser s.configDir with
+          | some target =>
+              let nextS := { s with history := s.history.take (max 1 (s.history.length - 2)) }
+              IO.println s!"[System]: Rewound session to {target}."
+              runLoop (maxTurns - 1) config nextS dispatcher categories
+          | none =>
+              runLoop (maxTurns - 1) config s dispatcher categories
+        else if cmd.name == "export" then
+          let args := parsedCmd.args
+          let filename := if args.length > 0 then args[0]! else "session_report.md"
+          let exportPath := s.configDir / filename
+          match ← exportToMarkdown exportPath s.history with
+          | Except.ok _ =>
+              IO.println s!"[System]: Session history successfully exported to: {exportPath}"
+          | Except.error e =>
+              IO.println s!"[Error]: Export failed: {repr e}"
+          runLoop (maxTurns - 1) config s dispatcher categories
+        else if cmd.name == "help" then
+          let (termCols, _) ← TerminalEnv.getTerminalSize
+          let helpText := Pakila.CLI.availableSlashCommands.foldl (fun acc c => acc ++ s!"/{c.name} - {c.description}\n") ""
+          TerminalEnv.println (renderCardBox "Pakila Slash Commands Help" helpText (termWidth := termCols))
+          runLoop (maxTurns - 1) config s dispatcher categories
         else if cmd.name == "memory" then
           Pakila.CLI.MemoryUI.runMemoryManager s.configDir s.configDir
           runLoop (maxTurns - 1) config s dispatcher categories
