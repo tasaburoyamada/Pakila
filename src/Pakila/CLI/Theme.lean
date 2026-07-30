@@ -32,6 +32,7 @@ namespace ProfessionalColors
   def lightYellow : Color := .xterm 229
   def brightWhite : Color := .xterm 231
   def darkGray : Color := .xterm 236
+  def cyan : Color := .cyan
 end ProfessionalColors
 
 structure Theme where

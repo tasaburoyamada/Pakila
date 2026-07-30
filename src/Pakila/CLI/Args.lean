@@ -35,6 +35,7 @@ structure RunArgs where
   outputFormat : OutputFormat := .text
   policies : List String := []
   skipTrust : Bool := false
+  verbose : Bool := false
 deriving Repr, BEq, Inhabited
 
 inductive Subcommand where

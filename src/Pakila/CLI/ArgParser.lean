@@ -43,6 +43,7 @@ def parseCliArgs (args : List String) : Except AppError Subcommand :=
         | none => Except.error (AppError.ConfigError s!"Invalid output format: {f}")
     | "--policy" :: p :: rest => parseRunArgs rest { acc with policies := p :: acc.policies }
     | "--skip-trust" :: rest => parseRunArgs rest { acc with skipTrust := true }
+    | "--verbose" :: rest => parseRunArgs rest { acc with verbose := true }
     | "-h" :: _ | "--help" :: _ => return Subcommand.help
     | "-v" :: _ | "--version" :: _ => return Subcommand.version
     | q :: rest => parseRunArgs rest { acc with query := q :: acc.query }

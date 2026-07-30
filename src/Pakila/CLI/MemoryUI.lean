@@ -2,6 +2,7 @@ import Lyceum.Types
 import Lyceum.Inference
 import Pakila.CLI.Prompts
 import Pakila.CLI.Theme
+import Pakila.CLI.Renderer
 import Pakila.Core.ContextLoader
 import Pakila.Core.Environment
 
@@ -34,13 +35,14 @@ partial def runMemoryManager (workspaceRoot : System.FilePath) (configDir : Syst
       let sources := ["Global", "Workspace"] ++ ctx.scopedCtxs.map (fun (p, _) => s!"Scoped ({p})") ++ ["Private"]
       let sIdx ← selectOption "Source:" sources
       match sIdx with
-      | some 0 => TerminalEnv.println ctx.globalCtx
-      | some 1 => TerminalEnv.println ctx.workspaceCtx
+      | some 0 => TerminalEnv.println (renderCardBox "Global Context" ctx.globalCtx)
+      | some 1 => TerminalEnv.println (renderCardBox "Workspace Context" ctx.workspaceCtx)
       | some i => 
           if i >= 2 && i - 2 < ctx.scopedCtxs.length then
-            TerminalEnv.println ctx.scopedCtxs[i - 2]!.2
+            let (path, content) := ctx.scopedCtxs[i - 2]!
+            TerminalEnv.println (renderCardBox s!"Scoped Context ({path})" content)
           else
-            TerminalEnv.println ctx.memoryCtx
+            TerminalEnv.println (renderCardBox "Private Memory" ctx.memoryCtx)
       | none => pure ()
       runMemoryManager workspaceRoot configDir
   | _ => runMemoryManager workspaceRoot configDir

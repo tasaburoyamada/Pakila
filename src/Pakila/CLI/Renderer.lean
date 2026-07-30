@@ -43,6 +43,30 @@ def renderNoticeBox (text : String) : String := Id.run do
   ) ""
   return top ++ "\n" ++ middle ++ bottom
 
+/-- 汎用グラフィカル・カードビュー描画 (2-C) -/
+def renderCardBox (title : String) (body : String) (color : Color := ProfessionalColors.cyan) : String := Id.run do
+  let lines := body.splitOn "\n"
+  let contentWidth := lines.foldl (fun acc l => max acc l.length) title.length + 4
+  let topBar := "╭─ " ++ title ++ " " ++ String.intercalate "" (List.replicate (max 0 (contentWidth - title.length - 3)) "─") ++ "╮"
+  let bottomBar := "╰" ++ String.intercalate "" (List.replicate (contentWidth + 1) "─") ++ "╯"
+  let middle := lines.foldl (fun acc l =>
+    let padLen := max 0 (contentWidth - l.length - 1)
+    let padding := String.intercalate "" (List.replicate padLen " ")
+    acc ++ applyColor color "│" ++ " " ++ l ++ padding ++ applyColor color "│" ++ "\n"
+  ) ""
+  return applyColor color topBar ++ "\n" ++ middle ++ applyColor color bottomBar
+
+/-- エラー表示用カード（1-A, 1-B 構造化エラー・サジェスチョン・ヒント統合） -/
+def renderErrorBox (errTitle : String) (errMsg : String) (suggestion : Option String := none) (similarCmds : List String := []) : String := Id.run do
+  let mut content := errMsg
+  if let some sug := suggestion then
+    content := content ++ "\n\n" ++ applyBold (applyColor Color.yellow "💡 解決のヒント:") ++ "\n  " ++ sug
+  if !similarCmds.isEmpty then
+    content := content ++ "\n\n" ++ applyBold (applyColor Color.cyan "🔍 もしかして:") ++ "\n"
+    for cmd in similarCmds do
+      content := content ++ s!"  • pakila {cmd}\n"
+  return renderCardBox s!"ERROR: {errTitle}" content Color.red
+
 /-- プロフェッショナルなマークダウンレンダラー -/
 def renderMarkdown (text : String) : String := Id.run do
   let lines := text.splitOn "\n"

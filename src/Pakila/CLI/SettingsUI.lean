@@ -2,6 +2,7 @@ import Lyceum.Types
 import Lyceum.Inference
 import Pakila.CLI.Prompts
 import Pakila.CLI.Terminal
+import Pakila.CLI.Renderer
 import Pakila.Config.Loader
 import Pakila.Core.Environment
 
@@ -15,12 +16,8 @@ namespace Pakila.CLI.SettingsUI
 
 /-- 設定の対話的エディタ -/
 partial def runSettingsEditor (config : AppConfig) : IO AppConfig := do
-  TerminalEnv.println "--- Pakila Settings Editor ---"
-  TerminalEnv.println s!"1. LLM Model:  {config.llmModel}"
-  TerminalEnv.println s!"2. API URL:    {config.llmApiUrl}"
-  TerminalEnv.println s!"3. API Key:    {if config.llmApiKey.isSome then "********" else "(None)"}"
-  TerminalEnv.println s!"4. Debug Mode: {config.debug}"
-  TerminalEnv.println "0. Exit and Save"
+  let details := s!"1. LLM Model:  {config.llmModel}\n2. API URL:    {config.llmApiUrl}\n3. API Key:    {if config.llmApiKey.isSome then "********" else "(None)"}\n4. Debug Mode: {config.debug}"
+  TerminalEnv.println (renderCardBox "Pakila Settings Editor" details)
   
   let choice ← selectOption "Select item to edit (0-4):" ["Exit", "LLM Model", "API URL", "API Key", "Debug Mode"]
   match choice with
