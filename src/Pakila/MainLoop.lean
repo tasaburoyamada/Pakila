@@ -43,7 +43,6 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
     IO.println "Max turns reached."
     return
 
-  TerminalEnv.renderUserTurn ""
   let inputOpt ← readLineWithHistory (applyColor .cyan "User > ") s.configDir
   
   match inputOpt with
@@ -86,7 +85,27 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
                   IO.println s!"[System]: Model switched to {m.1}."
                   runLoop (maxTurns - 1) config nextS dispatcher categories
               | none => IO.println s!"[Error]: Model '{modelName}' not found."; runLoop (maxTurns - 1) config s dispatcher categories
-          else IO.println "[Error]: Missing model name."; runLoop (maxTurns - 1) config s dispatcher categories
+          else
+            let mut options : List (String × (String × LlmInstance)) := []
+            for (cat, models) in categories do
+              for (name, inst) in models do
+                options := options ++ [(s!"[{cat}] {name}", (name, inst))]
+            if options.isEmpty then
+              IO.println "[Error]: No models available."
+              runLoop (maxTurns - 1) config s dispatcher categories
+            else
+              let optStrings := options.map (·.1)
+              match (← Pakila.CLI.Prompts.selectOption "モデルを選択してください:" optStrings) with
+              | some idx =>
+                  if let some (mName, mLlm) := options[idx]?.map (·.2) then
+                    let nextS := { s with activeModelName := mName, activeLlm := mLlm }
+                    IO.println s!"[System]: Model switched to {mName}."
+                    runLoop (maxTurns - 1) config nextS dispatcher categories
+                  else
+                    runLoop (maxTurns - 1) config s dispatcher categories
+              | none =>
+                  IO.println "[System]: Model selection cancelled."
+                  runLoop (maxTurns - 1) config s dispatcher categories
         else
           runLoop (maxTurns - 1) config s dispatcher categories
       | none =>
@@ -94,7 +113,6 @@ partial def runLoop (maxTurns : Nat) (config : AppConfig) (s : InterpreterState)
           IO.println s!"[Error]: Command not found."
           runLoop (maxTurns - 1) config s dispatcher categories
         else
-          Pakila.renderUserTurn input
           -- 2. 状態遷移 (論理界: 純粋関数・証明可能)
           let (action, nextS) := Pakila.transition s [.text input]
 

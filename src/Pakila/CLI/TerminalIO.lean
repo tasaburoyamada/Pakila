@@ -25,13 +25,26 @@ instance : TerminalEnv IO where
     let line ← (← IO.getStdin).getLine
     return line.trimAscii.toString
 
-  readChar := IO.println "[System]: readChar is not supported in this simplified IO mode." *> return 0 -- NOP実装
+  readChar := do
+    let stdin ← IO.getStdin
+    let buf ← stdin.read 1
+    if buf.isEmpty then return 0
+    return buf[0]!
 
-  enableRawMode := IO.println "[System]: RAW mode is not supported in this simplified IO mode." *> return .error "RAW mode is not supported."
+  enableRawMode := do
+    try
+      let _ ← IO.Process.run { cmd := "stty", args := #["raw", "-echo"] }
+      return .ok true
+    catch e =>
+      return .error s!"Failed to enable RAW mode: {e}"
 
-  disableRawMode := IO.println "[System]: RAW mode is not supported in this simplified IO mode." *> pure ()
+  disableRawMode := do
+    try
+      let _ ← IO.Process.run { cmd := "stty", args := #["-raw", "echo"] }
+    catch _ =>
+      pure ()
   
-  isRawMode := return false
+  isRawMode := return true
     
   spawnBrowser url := do
     let term ← IO.getEnv "TERM"

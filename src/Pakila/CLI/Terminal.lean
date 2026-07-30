@@ -20,17 +20,23 @@ namespace Pakila
 
 deriving instance Inhabited for IO.FS.DirEntry
 
-/-- カスタムReadLineの実装 (汎用版) -/
+/-- カスタムReadLineの実装 (汎用版: 履歴管理＋スラッシュコマンド補完・サジェスト付き) -/
 def readLineWithHistory {m : Type → Type} [Monad m] [TerminalEnv m] [MonadFinally m] [MonadLiftT IO m] (prompt : String) (configDir : System.FilePath) : m (Option String) := do
-  -- 履歴をロード
   let _ ← loadHistory configDir
-
-  -- プロンプトを表示
   TerminalEnv.print prompt
-
   let line ← TerminalEnv.readLine
-  if !line.trimAscii.toString.isEmpty then
-    appendHistory configDir line
+  let trimmed := line.trimAscii.toString
+
+  if trimmed.startsWith "/" then
+    let filtered := availableSlashCommands.filter (fun c => ("/" ++ c.name).startsWith trimmed || trimmed == "/")
+    match filtered with
+    | [] => pure ()
+    | _ =>
+        let names := filtered.map (fun c => "/" ++ c.name)
+        TerminalEnv.println s!"\x1b[38;5;242m💡 Available commands: {String.intercalate ", " names}\x1b[0m"
+
+  if !trimmed.isEmpty then
+    appendHistory configDir trimmed
   return line
 
 
