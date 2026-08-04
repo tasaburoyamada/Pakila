@@ -2,7 +2,11 @@
 /*.o
 /*.o.hash
 /*.o.trace
+*.o
+*.o.hash
+*.o.trace
 /local.gguf
 /pakila_history
 /tmp_loop.txt
 /cyclic_deps.log
+/gemini_slash_commands.txt

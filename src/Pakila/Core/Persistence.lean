@@ -1,0 +1,59 @@
+import Pakila.Core.Types
+import Pakila.Core.Interface
+import Lean.Data.Json
+import Lyceum.Types
+import Lyceum.Inference
+import Pakila.Core.State
+import Pakila.Governance.Vlog
+
+open Lyceum
+open Pakila
+
+--TEMP_MARKER--
+
+namespace Pakila
+
+open Lean hiding Message
+
+/-- 一時ファイルを用いた原子的なファイル書き込み -/
+def atomicWriteFile (path : System.FilePath) (content : String) : IO (Except AppError Unit) := do
+  let tempPath := System.FilePath.mk (path.toString ++ ".tmp")
+  let backupPath := System.FilePath.mk (path.toString ++ ".bak")
+
+  -- 1. Write to temp file
+  TerminalEnv.writeFile tempPath content
+
+  -- 2. Create backup of original file (if exists)
+  if (← path.pathExists) then
+    TerminalEnv.rename path backupPath
+  
+  -- 3. Rename temp file to target path
+  TerminalEnv.rename tempPath path
+
+  return Except.ok ()
+
+/-- セッション状態を保存する -/
+def saveSession (s : InterpreterState) : IO Unit := do
+  let sessionDir := s.configDir / ".pakila" / "sessions"
+  IO.FS.createDirAll sessionDir
+  let path := sessionDir / s!"{s.sessionId}.json"
+  let data := Json.mkObj [
+    ("sessionId", Json.str s.sessionId),
+    ("turnCount", Json.num s.turnCount),
+    ("activeModelName", Json.str s.activeModelName)
+  ]
+  let _ ← atomicWriteFile path (toString data)
+  pure ()
+
+/-- 破損したファイルからのリカバリ (バックアップから復元) -/
+def recoverFile (path : System.FilePath) : IO (Except AppError String) := do
+  let backupPath := System.FilePath.mk (path.toString ++ ".bak")
+  if (← backupPath.pathExists) then
+    TerminalEnv.println s!"[Persistence] Recovering {path} from backup."
+    let content ← TerminalEnv.readFile backupPath
+    TerminalEnv.writeFile path content
+    return Except.ok content
+  else
+    return Except.error (AppError.IoError s!"No backup file found for {path}")
+
+end Pakila

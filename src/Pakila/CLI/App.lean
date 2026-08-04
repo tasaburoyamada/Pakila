@@ -1,0 +1,218 @@
+import Pakila
+import Lyceum.Memory.VectorDB -- New import
+-- import Lyceum.Memory.NativeEmbedding -- New import
+import Pakila.Core.DigitalTwin
+import Pakila.Core.ContextLoader
+import Pakila.CLI.RewindUI
+import Pakila.CLI.Prompts
+import Pakila.CLI.TerminalBase
+import Pakila.Governance.McpManager
+import Pakila.Governance.SkillManager
+import Pakila.Governance.GitManager
+import Pakila.Config.Loader
+import Pakila.Core.LlmManager
+import Pakila.MainLoop
+import Pakila.Core.Environment -- Keep for BashEngine.cwd, but use Lyceum's TerminalEnv
+import Pakila.Plugins.Dispatcher
+import Pakila.Core.Bash
+import Pakila.Plugins.Sandbox
+import Pakila.Core.ResourceManager
+import Pakila.Plugins.WasmLoader
+import Lyceum.Core.Environment -- For TerminalEnv
+
+open Pakila
+open Lyceum
+open Lean hiding Message
+open Pakila.Core.DigitalTwin
+open Pakila.CLI.Prompts
+open Lyceum.Core.Environment -- Open to bring TerminalEnv into scope
+open Lyceum.Memory -- Open for VectorDB, NativeEmbedding, VectorEntry
+
+namespace Pakila.CLI.App
+
+/-- フラットにカテゴリ別モデルを選択するヘルパー -/
+def selectModelFlat [TerminalEnv IO] (categories : List (String × List (String × LlmInstance))) : IO (Option (String × LlmInstance)) := do
+  let mut options : List (String × (String × LlmInstance)) := []
+  for (cat, models) in categories do
+    for (name, inst) in models do
+      options := options ++ [(s!"[{cat}] {name}", (name, inst))]
+  if options.isEmpty then return none
+  let optStrings := options.map (·.1)
+  match (← Pakila.CLI.Prompts.selectOption "モデルを選択してください:" optStrings) with
+  | some idx => return options[idx]?.map (·.2)
+  | none => return none
+
+private def getConfigPath [TerminalEnv IO] : IO System.FilePath := do
+  let xdgDir ← getPakilaConfigDir
+  let xdgConfig := xdgDir / "config.toml"
+  if ← xdgConfig.pathExists then return xdgConfig
+  let localConfig := System.FilePath.mk "config.toml"
+  if ← localConfig.pathExists then return localConfig
+  return xdgConfig
+
+private def expandPath (path : String) : IO System.FilePath := do
+  if path.startsWith "~" then
+    let homeOption ← IO.getEnv "HOME"
+    let home := homeOption.getD "."
+    let homePath := System.FilePath.mk home
+    return homePath / (String.drop path 1).toString
+  else
+    return System.FilePath.mk path
+
+def printStartupLogo (model : String) [TerminalEnv IO] : IO Unit := do
+  let clearSeq := "\x1b[2J\x1b[H"
+  let logo := s!"
+ \x1b[38;5;74m▝\x1b[38;5;110m▜\x1b[38;5;140m▄\x1b[38;5;139m \x1b[38;5;174m \x1b[39m   \x1b[1m\x1b[38;5;231mPakila CLI\x1b[22m\x1b[38;5;248m v0.43.0\x1b[39m
+ \x1b[38;5;74m \x1b[38;5;110m \x1b[38;5;140m▝\x1b[38;5;139m▜\x1b[38;5;174m▄\x1b[39m
+ \x1b[38;5;74m \x1b[38;5;110m▗\x1b[38;5;140m▟\x1b[38;5;139m▀\x1b[38;5;174m \x1b[39m   \x1b[1m\x1b[38;5;231mSigned in with Google\x1b[22m\x1b[38;5;248m /auth\x1b[39m
+ \x1b[38;5;74m▝\x1b[38;5;110m▀\x1b[38;5;140m  \x1b[38;5;139m \x1b[38;5;174m \x1b[39m  \x1b[1m\x1b[38;5;231mActive Model:\x1b[22m {model}\x1b[38;5;248m /config\x1b[39m
+"
+  TerminalEnv.print (clearSeq ++ logo ++ "\n")
+  let notice := Pakila.renderNoticeBox "Welcome to Pakila! This environment is optimized for autonomous logic\nexecution and theorem verification. Type /help for more information."
+  TerminalEnv.println notice
+
+/-- CLI アプリケーションのメイン実行ロジック -/
+def run (args : List String) [TerminalEnv IO] : IO Unit := do
+  let subcommand ← match parseCliArgs args with
+    | Except.ok res => pure res
+    | Except.error e =>
+        let (termCols, _) ← TerminalEnv.getTerminalSize
+        let (errTitle, errMsg, sug, sim) := match e with
+          | AppError.ConfigError msg => ("Configuration Error", msg, some "設定ファイル (~/.config/pakila/config.toml) または引数オプションの形式を確認してください。", ["config", "run --help"])
+          | AppError.LlmError msg => ("LLM Interface Error", msg, some "PAKILA_API_KEY 環境変数または config.toml の llmApiKey を確認してください。", ["config"])
+          | _ => ("CLI Parsing Error", repr e |> toString, some "有効なサブコマンドまたはフラグを指定してください。", ["--help", "run", "config", "skills", "mcp"])
+        TerminalEnv.println (renderErrorBox errTitle errMsg sug sim (termWidth := termCols))
+        return
+
+
+
+  let configPath ← getConfigPath
+  let currentConfigDir := configPath.parent.getD "."
+  let config ← match (← loadConfig configPath) with | Except.ok c => pure c | Except.error _ => pure ({} : AppConfig)
+
+  let pattern ← analyzeWorkspace "."
+  let workspaceRoot ← IO.currentDir
+  let loadedCtx ← resolveFullContext workspaceRoot workspaceRoot currentConfigDir
+  let formattedCtx := formatFullContext loadedCtx
+
+  let promptManager : PromptManager := { systemPromptTemplate := config.systemPrompt }
+  let sysInfo ← getSystemInfo
+  let hookContext ← match (← IO.getEnv "PAKILA_HOOK_CONTEXT") with | some c => pure s!"\n<hook_context>\n{c}\n</hook_context>" | none => pure ""
+  let fullSystemPrompt := promptManager.injectInitState sysInfo formattedCtx pattern ++ hookContext
+
+  let mut currentApiKey := config.llmApiKey.getD ""
+  if currentApiKey.isEmpty then
+    match (← Pakila.CLI.AuthUI.triggerAuthFlow) with | some k => currentApiKey := k | none => pure ()
+  let baseUrl := if config.llmApiUrl.isEmpty then "https://generativelanguage.googleapis.com" else config.llmApiUrl
+
+  let remoteClient : LlmClient := { apiUrl := baseUrl, apiKey := currentApiKey, modelName := none }
+  let categories ← discoverCategorizedModels currentApiKey baseUrl currentConfigDir
+
+  let (selectedModelName, selectedLlm) ← do
+    let allModels := categories.foldl (fun acc (_, ms) => acc ++ ms) []
+    if !config.llmModel.isEmpty then
+      match allModels.find? (fun p => p.1.contains config.llmModel) with
+      | some m => pure m | none => pure ("", .remote remoteClient)
+    else if categories.isEmpty then pure ("", .remote remoteClient)
+    else if categories.length == 1 && categories[0]!.2.length == 1 then pure categories[0]!.2[0]!
+    else
+      match (← selectModelFlat categories) with
+      | some res => pure res
+      | none =>
+          if !categories.isEmpty && !categories[0]!.2.isEmpty then
+            pure categories[0]!.2[0]!
+          else
+            pure ("", .remote remoteClient)
+
+  let selectedModelName := if selectedModelName.isEmpty then "default" else selectedModelName
+
+  match subcommand with
+  | .run runArgs =>
+    let dbPath := currentConfigDir / s!".pakila/sessions/{runArgs.session.getD "current"}/vector_db.json"
+    let initialDb ← match (← Lyceum.Memory.VectorDB.load dbPath.toString) with | Except.ok db => pure db | Except.error _ => pure ∅
+
+    let initialState : InterpreterState := {
+      history := [Message.mkText .system fullSystemPrompt],
+      vectorDb := initialDb,
+      vlogState := [],
+      embeddingModel := none,
+      sessionId := runArgs.session.getD "current",
+      interactive := runArgs.prompt.isNone && runArgs.query.isEmpty,
+      executionMode := if runArgs.prompt.isSome || !runArgs.query.isEmpty then .Batch else .Interactive,
+      configDir := currentConfigDir,
+      activeLlm := selectedLlm,
+      activeModelName := selectedModelName
+    }
+    let initialInput := match runArgs.prompt with | some p => some p | none => if runArgs.query.isEmpty then none else some (String.intercalate " " runArgs.query)
+
+    let bashEngine : BashEngine := { cwd := currentConfigDir.toString, env := [] }
+    let sandboxEngine : SandboxEngine := { cwd := currentConfigDir.toString, env := [], level := .Low }
+    let resourceManager : ResourceManager := {}
+    let dispatcher : Dispatcher := {
+      bashEngine := bashEngine,
+      sandboxEngine := sandboxEngine,
+      useSandbox := initialState.sandbox,
+      resManager := resourceManager,
+      wasmPlugins := [],
+      taskCounter := 0
+    }
+
+    let finalState := match initialInput with
+      | some input => 
+          { initialState with history := initialState.history ++ [Message.mkText .user input] }
+      | none => initialState
+
+    printStartupLogo selectedModelName
+    runLoop 1000 config finalState dispatcher categories
+  | .mcp _ =>
+    let configPath ← getConfigPath
+    let currentConfigDir := configPath.parent.getD "."
+    let servers ← Governance.McpManager.listConfiguredMcpServers currentConfigDir
+    TerminalEnv.println s!"Configured MCP Servers ({servers.length}):"
+    for srv in servers do
+      TerminalEnv.println s!"  - {srv.name}: {srv.command}"
+  | .skills _ =>
+    let configPath ← getConfigPath
+    let currentConfigDir := configPath.parent.getD "."
+    let skills ← Governance.SkillManager.listDiscoveredSkills currentConfigDir
+    TerminalEnv.println s!"Discovered Skills ({skills.length}):"
+    for sk in skills do
+      TerminalEnv.println s!"  - {sk.name}: {sk.description} ({sk.path})"
+  | .session name =>
+    TerminalEnv.println s!"Session active: {name}"
+  | .listSessions =>
+    let configPath ← getConfigPath
+    let currentConfigDir := configPath.parent.getD "."
+    let sessionsDir := currentConfigDir / ".pakila" / "sessions"
+    if ← sessionsDir.pathExists then
+      let entries ← sessionsDir.readDir
+      TerminalEnv.println "Available Sessions:"
+      for e in entries do
+        TerminalEnv.println s!"  - {e.fileName}"
+    else
+      TerminalEnv.println "No session history found."
+  | .deleteSession name =>
+    let configPath ← getConfigPath
+    let currentConfigDir := configPath.parent.getD "."
+    let sessPath := currentConfigDir / ".pakila" / "sessions" / name
+    if ← sessPath.pathExists then
+      IO.FS.removeDirAll sessPath
+      TerminalEnv.println s!"Session '{name}' deleted."
+    else
+      TerminalEnv.println s!"Session '{name}' not found."
+  | .listExtensions =>
+    TerminalEnv.println "Extensions: Builtin FFI, Wasm engine active."
+  | .hooks _ =>
+    TerminalEnv.println "Hooks: Standard environment hooks loaded."
+  | .help =>
+    TerminalEnv.println "Usage: pakila [options] [command]\n"
+    TerminalEnv.println "Pakila CLI - Defaults to interactive mode.\n"
+  | .version => TerminalEnv.println "0.43.0"
+  | .config =>
+    let configPath ← getConfigPath
+    if ← configPath.pathExists then
+      TerminalEnv.println (← TerminalEnv.readFile configPath)
+    else
+      TerminalEnv.println "No configuration file found."
+
+end Pakila.CLI.App
