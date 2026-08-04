@@ -1,9 +1,8 @@
 import Lyceum.Types
 import Lyceum.Inference
+import Pakila.Util.String
 
 open Lyceum
-
---TEMP_MARKER--
 
 namespace Pakila
 
@@ -13,7 +12,7 @@ def containsSubstr (s sub : String) : Bool :=
   else (s.splitOn sub).length > 1
 
 /-- 
-Markdown テキストから特定の言語のコードブロックを抽出する。
+Markdown テキストから特定の言語のコードブロックを抽出する (純粋再帰・型保証)。
 例: ```bash ... ```
 -/
 def extractCodeBlocks (text : String) (lang : String) : List String :=
@@ -30,7 +29,7 @@ def extractCodeBlocks (text : String) (lang : String) : List String :=
         else
           loop rest true acc (current ++ line ++ "\n")
       else
-        if containsSubstr trimmed target then
+        if trimmed.startsWith target then
           loop rest true acc ""
         else
           loop rest false acc ""
@@ -38,17 +37,15 @@ def extractCodeBlocks (text : String) (lang : String) : List String :=
   loop lines false [] ""
 
 /-- 
-update_topic(title="...") 形式からタイトルを抽出する。
+update_topic(title="...") 形式からタイトルを抽出する (正規インデックス切り出し)。
 -/
 def extractTopicUpdate (text : String) : Option String :=
-  let target := "update_topic"
-  if !containsSubstr text target then none
-  else
-    let parts := text.splitOn "title=\""
-    if parts.length > 1 then
-      let titlePart := parts[1]!
-      let title := titlePart.takeWhile (fun c => c != '"')
-      some title.toString
-    else none
+  let target := "title=\""
+  let parts := text.splitOn target
+  if parts.length > 1 then
+    let titlePart := parts[1]!
+    let title := titlePart.takeWhile (fun c => c != '"')
+    some title.toString
+  else none
 
 end Pakila
