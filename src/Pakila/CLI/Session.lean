@@ -37,4 +37,9 @@ def saveSessionHistory (path : System.FilePath) (history : List Message) : IO (E
   catch e =>
     return Except.error (AppError.IoError (s!"{repr e}"))
 
+def loadSession (sessionId : String) : IO (Except AppError (List Message)) := do
+  let sessionDir := System.FilePath.mk ".pakila" / "sessions"
+  let path := sessionDir / s!"{sessionId}.json"
+  loadSessionHistory path
+
 end Pakila
