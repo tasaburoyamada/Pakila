@@ -32,6 +32,15 @@ def executeCurl (url : String) : IO String := do
 def executeWithTimeout (cmd : String) (args : Array String) (timeout : UInt32 := 30) : IO String := do
   executeNativeWithTimeout cmd args timeout
 
+@[extern "lean_enable_raw_mode"]
+opaque enableRawModeNative (dummy : Unit) : IO Bool
+
+@[extern "lean_disable_raw_mode"]
+opaque disableRawModeNative (dummy : Unit) : IO Unit
+
+@[extern "lean_get_terminal_size"]
+opaque getTerminalSizeNative (dummy : Unit) : IO (Nat × Nat)
+
 /-- ネイティブ隔離実行 (bwrap代替) -/
 def executeIsolated (cmd : String) (args : Array String) : IO String := do
   executeNativeIsolated cmd args

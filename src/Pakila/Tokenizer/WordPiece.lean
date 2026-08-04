@@ -3,55 +3,55 @@ import Pakila.Tokenizer.Vocab
 namespace Pakila.Tokenizer
 
 /--
-WordPiece トークナイズ。
-BERT などのモデルで使用される、最長前方一致アルゴリズム。
+WordPiece トークナイズ (最適化版)。
+BERT などのモデルで使用される最長前方一致アルゴリズム。
+`Array Nat` バッファリングと `String.Pos` を用いたスライスにより、
+無駄な List<->String 変換と O(N^3) 再割り当てを完全に排除。
 -/
 def wordPieceTokenize (v : Vocab) (text : String) : List Nat := Id.run do
   let words := text.splitOn " "
-  let mut allTokens := []
-  
-  let unkId := v.getId "[UNK]" |>.getD 100 -- BERT default
+  let mut allTokens : Array Nat := #[]
+  let unkId := v.getId "[UNK]" |>.getD 100
 
   for word in words do
     if word.isEmpty then continue
     
-    -- 1. そのまま語彙にあるかチェック
     if let some id := v.getId word then
-      allTokens := id :: allTokens
+      allTokens := allTokens.push id
       continue
 
-    -- 2. サブワード分割
-    let mut currentWord := word
-    let mut wordTokens := []
+    let mut startPos : String.Pos := 0
+    let endPos : String.Pos := word.endPos
+    let mut wordTokens : Array Nat := #[]
     let mut isBad := false
-    
-    while !currentWord.isEmpty do
-      let mut endIdx := currentWord.length
+
+    while startPos < endPos do
+      let mut curEnd : String.Pos := endPos
       let mut curTokenId : Option Nat := none
-      
-      while endIdx > 0 do
-        let mut sub := currentWord.toList.take endIdx |> String.ofList
-        if wordTokens.length > 0 then
-          sub := "##" ++ sub
-        
+      let mut matchedEnd : String.Pos := startPos
+
+      while curEnd > startPos do
+        let rawSub := word.extract startPos curEnd
+        let sub := if wordTokens.isEmpty then rawSub else "##" ++ rawSub
         if let some id := v.getId sub then
           curTokenId := some id
+          matchedEnd := curEnd
           break
-        endIdx := endIdx - 1
-      
+        curEnd := word.prev curEnd
+
       match curTokenId with
       | some id =>
-          wordTokens := id :: wordTokens
-          currentWord := currentWord.toList.drop endIdx |> String.ofList
+          wordTokens := wordTokens.push id
+          startPos := matchedEnd
       | none =>
           isBad := true
           break
-    
-    if isBad then
-      allTokens := unkId :: allTokens
-    else
-      allTokens := wordTokens ++ allTokens
 
-  return allTokens.reverse
+    if isBad then
+      allTokens := allTokens.push unkId
+    else
+      allTokens := allTokens.append wordTokens
+
+  return allTokens.toList
 
 end Pakila.Tokenizer

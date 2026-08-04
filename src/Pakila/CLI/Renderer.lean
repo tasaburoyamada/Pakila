@@ -29,19 +29,26 @@ structure JsonOutput where
   status : Option String := none
 deriving ToJson, FromJson
 
+/-- N個の文字列パターンを直連鎖する最適化ヘルパー (中間List割り当てゼロ) -/
+def repeatChar (c : Char) (n : Nat) : String := Id.run do
+  let mut s := ""
+  for _ in [0:n] do
+    s := s.push c
+  return s
+
 /--
 Gemini CLI 模倣の角丸ボックス描画
 -/
 def renderNoticeBox (text : String) : String := Id.run do
   let lines := text.splitOn "\n"
   let width := lines.foldl (fun acc l => max acc l.length) 0 + 2
-  let top := applyColor ProfessionalColors.lightYellow ("╭" ++ String.intercalate "" (List.replicate width "─") ++ "╮")
-  let bottom := applyColor ProfessionalColors.lightYellow ("╰" ++ String.intercalate "" (List.replicate width "─") ++ "╯")
-  let middle := lines.foldl (fun acc l =>
-    let padding := String.intercalate "" (List.replicate (width - l.length - 1) " ")
-    acc ++ applyColor ProfessionalColors.lightYellow "│" ++ " " ++ l ++ padding ++ applyColor ProfessionalColors.lightYellow "│" ++ "\n"
-  ) ""
-  return top ++ "\n" ++ middle ++ bottom
+  let top := applyColor ProfessionalColors.lightYellow ("╭" ++ repeatChar '─' width ++ "╮")
+  let bottom := applyColor ProfessionalColors.lightYellow ("╰" ++ repeatChar '─' width ++ "╯")
+  let middleLines := lines.map (fun l =>
+    let padding := repeatChar ' ' (width - l.length - 1)
+    applyColor ProfessionalColors.lightYellow "│" ++ " " ++ l ++ padding ++ applyColor ProfessionalColors.lightYellow "│"
+  )
+  return top ++ "\n" ++ String.join (middleLines.map (· ++ "\n")) ++ bottom
 
 /-- 汎用グラフィカル・カードビュー描画 (2-C) - 端末幅への動的適応付き -/
 def renderCardBox (title : String) (body : String) (color : Color := ProfessionalColors.cyan) (termWidth : Nat := 80) : String := Id.run do
@@ -49,15 +56,15 @@ def renderCardBox (title : String) (body : String) (color : Color := Professiona
   let lines := body.splitOn "\n"
   let maxContentLen := lines.foldl (fun acc l => max acc l.length) title.length
   let contentWidth := min (maxBoxWidth - 4) (max maxContentLen title.length)
-  let topBar := "╭─ " ++ title ++ " " ++ String.intercalate "" (List.replicate (max 0 (contentWidth - title.length)) "─") ++ "╮"
-  let bottomBar := "╰" ++ String.intercalate "" (List.replicate (contentWidth + 4) "─") ++ "╯"
-  let middle := lines.foldl (fun acc l =>
+  let topBar := "╭─ " ++ title ++ " " ++ repeatChar '─' (max 0 (contentWidth - title.length)) ++ "╮"
+  let bottomBar := "╰" ++ repeatChar '─' (contentWidth + 4) ++ "╯"
+  let middleLines := lines.map (fun l =>
     let trimmedLine := if l.length > contentWidth then (l.take (contentWidth - 3)).toString ++ "..." else l
     let padLen := max 0 (contentWidth - trimmedLine.length + 2)
-    let padding := String.intercalate "" (List.replicate padLen " ")
-    acc ++ applyColor color "│" ++ " " ++ trimmedLine ++ padding ++ applyColor color "│" ++ "\n"
-  ) ""
-  return applyColor color topBar ++ "\n" ++ middle ++ applyColor color bottomBar
+    let padding := repeatChar ' ' padLen
+    applyColor color "│" ++ " " ++ trimmedLine ++ padding ++ applyColor color "│"
+  )
+  return applyColor color topBar ++ "\n" ++ String.join (middleLines.map (· ++ "\n")) ++ applyColor color bottomBar
 
 /-- エラー表示用カード（1-A, 1-B 構造化エラー・サジェスチョン・ヒント統合） -/
 def renderErrorBox (errTitle : String) (errMsg : String) (suggestion : Option String := none) (similarCmds : List String := []) (termWidth : Nat := 80) : String := Id.run do

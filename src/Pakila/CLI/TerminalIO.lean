@@ -33,28 +33,23 @@ instance : TerminalEnv IO where
 
   enableRawMode := do
     try
-      let _ ← IO.Process.run { cmd := "stty", args := #["raw", "-echo"] }
-      return .ok true
+      let ok ← enableRawModeNative ()
+      if ok then return .ok true else return .error "Failed to enable RAW mode via FFI"
     catch e =>
       return .error s!"Failed to enable RAW mode: {e}"
 
   disableRawMode := do
-    try
-      let _ ← IO.Process.run { cmd := "stty", args := #["-raw", "echo"] }
-    catch _ =>
-      pure ()
-  
+    disableRawModeNative ()
+
   isRawMode := return true
-    
+
   spawnBrowser url := do
     let term ← IO.getEnv "TERM"
     let dir ← IO.currentDir
     let cmd := if term == some "xterm-256color" || dir.toString.contains "/" then "xdg-open" else "open"
     try
-      -- NOTE: タイムアウト機能は一旦削除。必要であれば別途実装。
       let _ ← IO.Process.run { cmd := cmd, args := #[url] }
       return true
-      -- IO.Process.run は例外を投げるため、catch でエラーを捕捉
     catch _ => 
       IO.println s!"[Environment] Browser failed. Please open manually: {url}"
       return false
@@ -69,14 +64,7 @@ instance : TerminalEnv IO where
         return (cols, lines)
     | _ =>
         try
-          let out ← IO.Process.run { cmd := "stty", args := #["size"] }
-          let parts := out.trimAscii.toString.splitOn " "
-          if parts.length >= 2 then
-            let lines := parts[0]!.toNat?.getD 24
-            let cols := parts[1]!.toNat?.getD 80
-            return (cols, lines)
-          else
-            return (80, 24)
+          getTerminalSizeNative ()
         catch _ =>
           return (80, 24)
 
