@@ -36,7 +36,7 @@ class TerminalEnv (m : Type → Type) where
   isDir : System.FilePath → m Bool
   readDir : System.FilePath → m (List System.FilePath)
   getFileName : System.FilePath → m String
-  spawnProcess : {cfg : IO.Process.StdioConfig} → ProcessSpawnArgs → m (Except String (ProcessChild cfg))
+  spawnProcess : (args : ProcessSpawnArgs) → m (Except String (ProcessChild args.toStdioConfig))
   getEnv : String → m (Option String)
   getCurrentDir : m System.FilePath
   runProcess : ProcessSpawnArgs → m (Except String ProcessOutput)

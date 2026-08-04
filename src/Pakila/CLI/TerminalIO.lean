@@ -95,10 +95,10 @@ instance : TerminalEnv IO where
     let entries ← path.readDir
     return entries.map (fun e => e.path) |>.toList
   getFileName path := pure (path.fileName.getD "")
-  spawnProcess args := unsafe do
+  spawnProcess args := do
     try
       let child ← IO.Process.spawn args
-      return .ok (unsafeCast child)
+      return .ok child
     catch e =>
       return .error (s!"Process spawn failed: {e}")
 

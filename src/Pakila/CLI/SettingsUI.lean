@@ -10,11 +10,12 @@ open Lyceum
 open Pakila
 open Pakila.CLI.Prompts
 
---TEMP_MARKER--
-
 namespace Pakila.CLI.SettingsUI
 
-/-- 設定の対話的エディタ -/
+/-- 
+設定の対話的エディタ (TerminalEnv 抽象化完全準拠)
+IO.getStdin 直呼び出しを廃止し、TerminalEnv を介した入出力へ統一。
+-/
 partial def runSettingsEditor (config : AppConfig) : IO AppConfig := do
   let (termCols, _) ← TerminalEnv.getTerminalSize
   let details := s!"1. LLM Model:  {config.llmModel}\n2. API URL:    {config.llmApiUrl}\n3. API Key:    {if config.llmApiKey.isSome then "********" else "(None)"}\n4. Debug Mode: {config.debug}"
@@ -25,15 +26,15 @@ partial def runSettingsEditor (config : AppConfig) : IO AppConfig := do
   | some 0 | none => return config
   | some 1 => 
       TerminalEnv.print "New Model Name: "
-      let val ← (← IO.getStdin).getLine
+      let val ← TerminalEnv.readLine
       runSettingsEditor { config with llmModel := val.trimAscii.toString }
   | some 2 =>
       TerminalEnv.print "New API URL: "
-      let val ← (← IO.getStdin).getLine
+      let val ← TerminalEnv.readLine
       runSettingsEditor { config with llmApiUrl := val.trimAscii.toString }
   | some 3 =>
       TerminalEnv.print "New API Key: "
-      let val ← (← IO.getStdin).getLine
+      let val ← TerminalEnv.readLine
       runSettingsEditor { config with llmApiKey := some val.trimAscii.toString }
   | some 4 =>
       let val ← yesNo "Enable Debug Mode?"

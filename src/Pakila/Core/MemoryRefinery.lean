@@ -7,16 +7,15 @@ import Pakila.Plugins.FFI
 open Lyceum
 open Pakila
 
---TEMP_MARKER--
-
 namespace Pakila.Core.MemoryRefinery
 
 /-- 
-4ティア・メモリ・プロトコルに従い、関連する全ての記憶ファイルを収集する。
+4ティア・メモリ・プロトコルに従い、関連する全ての記憶ファイルを収集する (最適化版)。
 1. Global (~/.gemini/GEMINI.md)
 2. Project (./GEMINI.md)
 3. Subdirectory (e.g. ./src/GEMINI.md)
 4. Private (.pakila/memory/MEMORY.md)
+中間文字列連結を単一バッファリング配列にまとめ、パス階層探索を非反復に最適化。
 -/
 def resolveTieredMemory (workspaceRoot : System.FilePath) (currentDir : System.FilePath) : IO String := do
   let home ← Pakila.Plugins.FFI.getHomeDirectoryNative ()
@@ -24,30 +23,30 @@ def resolveTieredMemory (workspaceRoot : System.FilePath) (currentDir : System.F
   let projectPath := workspaceRoot / "GEMINI.md"
   let privatePath := workspaceRoot / ".pakila" / "memory" / "MEMORY.md"
   
-  -- サブディレクトリの GEMINI.md を探索 (現在のディレクトリからルートまで遡る)
-  let rec findSubDirGemini (dir : System.FilePath) : IO (List System.FilePath) := do
-    if dir == workspaceRoot || dir.toString == "." || dir.toString == "/" then return []
-    let path := dir / "GEMINI.md"
-    let rest ← if let some parent := dir.parent then findSubDirGemini parent else pure []
-    if ← path.pathExists then return path :: rest
-    else return rest
+  -- サブディレクトリの GEMINI.md を非反復探索
+  let mut subDirPaths : List System.FilePath := []
+  let mut curr := currentDir
+  while curr != workspaceRoot && curr.toString != "." && curr.toString != "/" do
+    let path := curr / "GEMINI.md"
+    if ← path.pathExists then
+      subDirPaths := path :: subDirPaths
+    match curr.parent with
+    | some parent => curr := parent
+    | none => break
 
-  let subDirPaths ← findSubDirGemini currentDir
-  
-  let mut fullContext := ""
-  
-  let appendFile (label : String) (p : System.FilePath) (acc : String) : IO String := do
+  let mut sections : Array String := #[]
+
+  let appendSection (label : String) (p : System.FilePath) : IO Unit := do
     if ← p.pathExists then
       let content ← TerminalEnv.readFile p
-      return acc ++ s!"\n--- {label} ({p}) ---\n{content}\n"
-    else return acc
+      sections := sections.push s!"\n--- {label} ({p}) ---\n{content}\n"
 
-  fullContext ← appendFile "Global Memory" globalPath fullContext
-  fullContext ← appendFile "Project Instructions" projectPath fullContext
-  for p in subDirPaths do
-    fullContext ← appendFile "Subdirectory Instructions" p fullContext
-  fullContext ← appendFile "Private Project Memory" privatePath fullContext
-  
-  return fullContext
+  appendSection "Global Memory" globalPath
+  appendSection "Project Instructions" projectPath
+  for p in subDirPaths.reverse do
+    appendSection "Subdirectory Instructions" p
+  appendSection "Private Project Memory" privatePath
+
+  return String.join sections.toList
 
 end Pakila.Core.MemoryRefinery
