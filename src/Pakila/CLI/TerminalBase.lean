@@ -2,19 +2,25 @@ import Pakila.Core.Environment
 
 namespace Pakila.CLI.TerminalBase
 
+/-- ANSI ASCII定数シンボル -/
+def ASCII_BRACKET : UInt8 := 91 -- '['
+def ASCII_UP      : UInt8 := 65 -- 'A'
+def ASCII_DOWN    : UInt8 := 66 -- 'B'
+def ASCII_RIGHT   : UInt8 := 67 -- 'C'
+def ASCII_LEFT    : UInt8 := 68 -- 'D'
+
 /-- ANSIエスケープシーケンスの読み込み -/
 def readEscape {m : Type → Type} [Monad m] [TerminalEnv m] : m (Option String) := do
   let b1 ← TerminalEnv.readChar
   if b1 == 0 then return none -- EOF
-  if b1 == 91 then -- '['
+  if b1 == ASCII_BRACKET then
     let b2 ← TerminalEnv.readChar
     if b2 == 0 then return none
-    match b2 with
-    | 65 => return some "UP"
-    | 66 => return some "DOWN"
-    | 67 => return some "RIGHT"
-    | 68 => return some "LEFT"
-    | _ => return none
+    if b2 == ASCII_UP then return some "UP"
+    else if b2 == ASCII_DOWN then return some "DOWN"
+    else if b2 == ASCII_RIGHT then return some "RIGHT"
+    else if b2 == ASCII_LEFT then return some "LEFT"
+    else return none
   return none
 
 /-- 

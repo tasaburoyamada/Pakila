@@ -10,7 +10,7 @@ structure SlashCommand where
   name : String
   description : String
   template : String
-deriving Inhabited
+deriving Inhabited, BEq, Repr
 
 /-- 利用可能なスラッシュコマンドの一覧 -/
 def availableSlashCommands : List SlashCommand := [
@@ -26,19 +26,34 @@ def availableSlashCommands : List SlashCommand := [
   { name := "quit",     description := "Pakilaを終了する", template := "/quit" }
 ]
 
+/-- スラッシュコマンド判定用 O(1) パターンディスパッチ -/
+def lookupSlashCommand (name : String) : Option SlashCommand :=
+  match name with
+  | "model"  => some { name := "model",    description := "LLMモデルを切り替える", template := "/model " }
+  | "rewind" => some { name := "rewind",   description := "過去の状態へ対話的に巻き戻す (Rewind TUI)", template := "/rewind" }
+  | "config" => some { name := "config",   description := "設定を編集する", template := "/config" }
+  | "memory" => some { name := "memory",   description := "メモリ管理UIを起動する", template := "/memory" }
+  | "export" => some { name := "export",   description := "対話履歴をMarkdownファイルへ出力する", template := "/export " }
+  | "help"   => some { name := "help",     description := "ヘルプを表示する", template := "/help" }
+  | "clear"  => some { name := "clear",    description := "画面をクリアする", template := "/clear" }
+  | "reset"  => some { name := "reset",    description := "セッションをリセットする", template := "/reset" }
+  | "exit"   => some { name := "exit",     description := "Pakilaを終了する", template := "/exit" }
+  | "quit"   => some { name := "quit",     description := "Pakilaを終了する", template := "/quit" }
+  | _        => none
+
 /-- パースされたコマンド -/
 structure ParsedCommand where
   cmd : SlashCommand
   args : List String
-deriving Inhabited
+deriving Inhabited, Repr
 
-/-- スラッシュコマンドをパースする -/
+/-- スラッシュコマンドをパースする (O(1) ルックアップ) -/
 def parseSlashCommand (input : String) : Option ParsedCommand :=
   if input.startsWith "/" then
     let parts := input.splitOn " "
-    let cmdName := parts.head!.drop 1
+    let cmdName := (parts.head!.drop 1).toString
     let args := parts.tail
-    match availableSlashCommands.find? (fun c => c.name == cmdName) with
+    match lookupSlashCommand cmdName with
     | some c => some { cmd := c, args := args }
     | none => none
   else

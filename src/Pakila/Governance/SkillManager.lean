@@ -26,12 +26,22 @@ def getSkillDirectories (configDir : System.FilePath) : IO (List System.FilePath
   let projectDir := [System.FilePath.mk ".agents" / "skills"]
   return projectDir ++ [configDir / "skills", xdgConfigDir / "skills"]
 
-/-- SKILL.md から説明文を抽出する簡易パーサー -/
+/-- SKILL.md から説明文を抽出する確実なパーサー (動的キー＆クォート対応) -/
 def extractDescription (content : String) : String :=
   let lines := content.splitOn "\n"
-  let descLine := lines.find? (fun l => l.startsWith "Description:" || l.startsWith "description:")
+  let descLine := lines.find? (fun l => 
+    let trimmed := l.trimAscii.toString
+    trimmed.startsWith "Description:" || trimmed.startsWith "description:"
+  )
   match descLine with
-  | some l => (l.drop 12).trimAscii.toString
+  | some l => 
+      let parts := l.splitOn ":"
+      if parts.length > 1 then
+        let rawVal := String.join (parts.tail.map (· ++ ":"))
+        let val := rawVal.dropRight 1 |>.trimAscii.toString
+        let unquoted := if val.startsWith "\"" && val.endsWith "\"" then (val.drop 1 |>.dropRight 1).trimAscii.toString else val
+        if unquoted.isEmpty then "No description available." else unquoted
+      else "No description available."
   | none => "No description available."
 
 /-- スキルの一覧取得 -/
