@@ -131,6 +131,25 @@ def testSessionRecovery : IO UInt32 := do
   let _ ← IO.Process.run { cmd := "rm", args := #[badPath.toString] }
   return failures
 
+def testVlogSpecTwoLayer : IO UInt32 := do
+  IO.println "\n--- Test: VlogSpec Two-Layer Conversion ---"
+  let mut failures : UInt32 := 0
+  
+  let nodes : List VlogNode := [
+    .Ctx "Pakila" "Test" "Verification",
+    .Bias 0.9 1.0 1.0 0.8 1.0,
+    .ShiftMandatory "No_Apologies"
+  ]
+  let spec := nodesToSpec nodes
+  failures := failures + (← assert "Extracts domain correctly" (spec.semantic.domain == "Pakila"))
+  failures := failures + (← assert "Extracts mandatory constraint" (spec.semantic.mandatory == ["No_Apologies"]))
+  
+  let reqOpt := biasToRequestOptions nodes
+  let tempVal := match reqOpt with | some o => o.temperature.getD 0.0 | none => 0.0
+  failures := failures + (← assert "Maps bias to physical temperature" (tempVal > 0.19 && tempVal < 0.21))
+  
+  return failures
+
 def runUniversalRobustnessTests : IO UInt32 := do
   IO.println "=== Pakila Universal Robustness Test Suite ==="
   let mut totalFailures : UInt32 := 0
@@ -138,6 +157,7 @@ def runUniversalRobustnessTests : IO UInt32 := do
   totalFailures := totalFailures + (← testBashResourceLimits)
   totalFailures := totalFailures + (← testFileBoundaryGuards)
   totalFailures := totalFailures + (← testSessionRecovery)
+  totalFailures := totalFailures + (← testVlogSpecTwoLayer)
   
   if totalFailures == 0 then
     IO.println "\n========================================"

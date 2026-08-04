@@ -20,5 +20,5 @@
 - **コアアーキテクチャ設計書**: [ARCH_PAKILA_CORE.md](./doc/ARCH_PAKILA_CORE.md)
 - **インターフェース & CLI 機能仕様書**: [SPEC_INTERFACE_AND_CLI.md](./doc/SPEC_INTERFACE_AND_CLI.md)
 - **統治 & セキュリティ仕様書**: [GOV_VLOG_AND_SECURITY.md](./doc/GOV_VLOG_AND_SECURITY.md)
-- **開発ステータス**: [CURRENT_STATUS.md](./doc/CURRENT_STATUS.md)
+- **開発ステータス**: [開発状況.md](./doc/開発状況.md)
 

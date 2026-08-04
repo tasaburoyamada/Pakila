@@ -17,20 +17,29 @@
 ### 2.1. 概要と役割 (`Pakila.Governance.Vlog`)
 `.vlog`（Vector Log）ファイルは、AI の推論確率分布に対する「人間（L3）からのダイレクトな価値評価ベクトル」を固定するための宣言型仕様定義ファイルである。
 
-### 2.2. アテンションベクトル構造 (`DESIGN_SPEC.vlog`)
+### 2.2. 二層分離ベクトルステート構造 (`Pakila.Governance.VlogSpec`)
+`.vlog` 統治は「物理トークン/パラメータ制御（Physical Layer）」と「プロンプトコンテクスト制御（Semantic Layer）」の二層分離型データ構造として定義される。
+
+```lean
+structure PhysicalVlogConfig where
+  temperature     : Option Float
+  topP            : Option Float
+  maxTokens       : Option Nat
+  logitBias       : List (String × Float)
+  stopSequences   : List String
+
+structure SemanticVlogConfig where
+  domain          : String
+  subDomain       : String
+  goal            : String
+  mandatory       : List String
+  concepts        : List String
 ```
-@CTX:[DOM:Pakila|SUB:Modernization|GOAL:Full_Roadmap_Completion_Gemini2_Specs]
-@BIAS:{P:1.0, M:1.0, S:1.0, D:1.0, C:1.0}
-@DELTA(Gemini2_Full_Modernized_Stack > Gemini_043_Legacy_Stack)
-+ [StructuredOutput_OpenAPI_Schema_Enforced]
-+ [Native_Thinking_Config_Separated]
-+ [Parallel_Tool_Dispatching_Monad]
-! [241Jobs_Full_Pass_Verified]
-```
+
 - **役割**:
-  - `@CTX`: コンテクストドメイン及び達成ゴールの指定。
-  - `@BIAS`: パラメータ重み・指向性バイアス。
-  - `@DELTA`: 旧スタックから新スタックへの差分変化ベクトル。
+  - `PhysicalVlogConfig`: API / C++ FFI レベルで推論エンジンに直結する物理パラメータ（Logit Bias, Stop Sequences, Temperature）。
+  - `SemanticVlogConfig`: システムプロンプト空間へ安全かつ一元的に注入される宣言的文脈・ハード制約。
+  - `formatVlogState`: 一次元バッファリングと `String.join` による $O(N)$ パフォーマンスを保証。
 
 ---
 
