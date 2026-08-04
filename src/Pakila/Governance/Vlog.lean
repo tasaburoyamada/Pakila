@@ -1,12 +1,41 @@
 import Lean.Data.Json
+import Lyceum.Types
 
 namespace Pakila
 
 open Lean
 
 /-- 
-HV-CAD Vector-State Log (.vlog) の構成要素。
+1. 物理レイヤー: LLM推論エンジン（API / FFI）へ直接渡す物理パラメータ & トークン制御
 -/
+structure PhysicalVlogConfig where
+  temperature     : Option Float := none
+  topP            : Option Float := none
+  maxTokens       : Option Nat := none
+  logitBias       : List (String × Float) := []
+  stopSequences   : List String := []
+deriving Repr, BEq, Inhabited, ToJson, FromJson
+
+/-- 
+2. 意味レイヤー: プロンプトコンテクストへ注入する概念・制約
+-/
+structure SemanticVlogConfig where
+  domain          : String := ""
+  subDomain       : String := ""
+  goal            : String := ""
+  mandatory       : List String := []
+  concepts        : List String := []
+deriving Repr, BEq, Inhabited, ToJson, FromJson
+
+/-- 
+統合 Vlog コンテナ (二層分離 + トークン制御物理マッピング)
+-/
+structure VlogSpec where
+  physical : PhysicalVlogConfig := {}
+  semantic : SemanticVlogConfig := {}
+deriving Repr, BEq, Inhabited, ToJson, FromJson
+
+/-- 過去の互換性のための VlogNode 定義 -/
 inductive VlogNode where
   | Ctx (domain sub goal : String)
   | Bias (p m s d c : Float)
@@ -33,7 +62,23 @@ inductive VlogNode where
   | DataLifeline (target : String)
   | ContractIntegrity (semantics : String)
   | PhysicalBoundary (limits : String)
+  | Spec (spec : VlogSpec)
 deriving Repr, BEq, Inhabited, ToJson, FromJson
+
+/-- VlogNode リストから VlogSpec への統合変換 -/
+def nodesToSpec (nodes : List VlogNode) : VlogSpec :=
+  nodes.foldl (fun spec node =>
+    match node with
+    | .Ctx d s g => { spec with semantic := { spec.semantic with domain := d, subDomain := s, goal := g } }
+    | .Bias p _m _s d _c =>
+        let temp := max 0.0 (min 2.0 (1.0 - d))
+        let topPVal := if p > 0.0 && p <= 1.0 then some p else none
+        { spec with physical := { spec.physical with temperature := some temp, topP := topPVal } }
+    | .ShiftMandatory t => { spec with semantic := { spec.semantic with mandatory := spec.semantic.mandatory ++ [t] } }
+    | .Concept ts => { spec with semantic := { spec.semantic with concepts := spec.semantic.concepts ++ ts } }
+    | .Spec s => s
+    | _ => spec
+  ) {}
 
 /-- VLOG ノードをシンボリックな文字列へ変換する -/
 def vlogNodeToTokens (node : VlogNode) : String :=
@@ -63,10 +108,11 @@ def vlogNodeToTokens (node : VlogNode) : String :=
   | .DataLifeline d => s!"@LIFELINE[{d}]\n"
   | .ContractIntegrity c => s!"@CONTRACT[{c}]\n"
   | .PhysicalBoundary p => s!"@BOUNDS[{p}]\n"
+  | .Spec s => s!"@PHYSICAL_TEMP:{s.physical.temperature.getD 1.0}\n"
 
 /-- VLOG 全体をファイルへ書き込む -/
 def writeVlog (path : System.FilePath) (nodes : List VlogNode) : IO Unit := do
-  let content := nodes.foldl (fun acc n => acc ++ vlogNodeToTokens n) ""
+  let content := (nodes.map vlogNodeToTokens) |> String.join
   IO.FS.writeFile path (content ++ "@EOF\n")
 
 end Pakila

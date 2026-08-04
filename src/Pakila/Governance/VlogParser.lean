@@ -298,39 +298,40 @@ def parseVlogString (input : String) : Except String (List VlogNode) :=
   let nodes := lines.filterMap parseVlogLine
   Except.ok nodes
 
-/-- VlogNodeのリストからプロンプト注入用の文字列を生成する -/
+/-- VlogNodeのリストからプロンプト注入用の文字列を生成する (O(N) 最適化) -/
 def formatVlogState (nodes : List VlogNode) : String :=
   if nodes.isEmpty then ""
   else
-    let header := "## [HV-CAD Vector-State Injection & Architectural Auditor Mandate]\n"
-    nodes.foldl (fun acc node =>
+    let lines := nodes.map (fun node =>
       match node with
-      | .Ctx d s g => acc ++ s!"- Context: Domain={d}, Sub={s}, Goal={g}\n"
-      | .Bias p m s d c => acc ++ s!"- Bias Weights: P={p}, M={m}, S={s}, D={d}, C={c}\n"
-      | .Delta w l => acc ++ s!"- Decision Delta: {w} > {l}\n"
-      | .ShiftPlus t => acc ++ s!"- Enabled Constraint: {t}\n"
-      | .ShiftMinus t => acc ++ s!"- Suppressed Constraint: {t}\n"
-      | .ShiftMandatory t => acc ++ s!"- Mandatory Constraint: {t}\n"
-      | .Concept ts => acc ++ s!"- Active Concepts: {ts}\n"
-      | .DensityFocus t => acc ++ s!"- [HIGH-DENSITY FOCUS]: Eliminate generalities/filler. Concentrate exact facts & structure on: {t}\n"
-      | .DensitySlack t => acc ++ s!"- [LOW-DENSITY SLACK]: State concisely in 1-2 sentences. Retain spatial/cultural silence on: {t}\n"
-      | .CadenceDyna pat => acc ++ s!"- [CADENCE RHYTHM DYNAMICS]: Vary sentence lengths sharply according to sequence [{String.intercalate ", " (pat.map toString)}]\n"
-      | .IrreversibleShift b a => acc ++ s!"- [IRREVERSIBLE STATE TRANSITION]: Permanently transform state from '{b}' -> '{a}'. DO NOT reset to initial state.\n"
-      | .ExpectationGap p r => acc ++ s!"- [EXPECTATION GAP / SUBVERSION]: Undermine user's implicit prediction '{p}' with logical reality '{r}'.\n"
-      | .ConflictTradeoff a b => acc ++ s!"- [GENUINE CONFLICT TRADEOFF]: Enforce unavoidable choice between '{a}' vs '{b}'. Both must entail severe cost.\n"
-      | .NarrativePerspective r t => acc ++ s!"- [NARRATIVE PERSPECTIVE & TONE]: Adopt narrator role '{r}' with tone '{t}'.\n"
-      | .Sanctuary v => acc ++ s!"- [STEP 1 SANCTUARY]: Build highly sophisticated, unyielding moral/idealistic sanctuary around: {v}\n"
-      | .Friction c => acc ++ s!"- [STEP 2 FRICTION]: Depict fierce internal conflict between the unyielding principle and: {c}\n"
-      | .LogicalCrush l => acc ++ s!"- [STEP 3 LOGICAL CRUSH]: Deconstruct the virtue through rigorous, inescapable logic of: {l}\n"
-      | .IrreversibleStain s => acc ++ s!"- [STEP 4 IRREVERSIBLE STAIN]: Depict the enduring spiritual stain and dark aesthetic where the entity observes its own ruined virtue: {s}\n"
-      | .CoreValue p => acc ++ s!"- [CHARACTER CORE VALUE]: Unyielding core identity & choice principle: {p}. DO NOT drift or alter without explicit narrative cause.\n"
-      | .Idiolect t h => acc ++ s!"- [CHARACTER IDIOLECT & PERSONA]: Persona tone '{t}', speech habit '{h}'. Maintain inviolable voice identity.\n"
-      | .InformationBoundary k u => acc ++ s!"- [INFORMATION BOUNDARY / ASYMMETRY]: Known facts '{k}', Blindspots/Unknowns '{u}'. Strictly prohibit meta-knowledge leakage.\n"
-      | .TimelinePhase s e => acc ++ s!"- [TIMELINE & EXPERIENCE STAGE]: Growth stage '{s}', Accumulated experience '{e}'. Reflect depth of losses & gains.\n"
-      | .DataLifeline d => acc ++ s!"- [DATA LIFELINE INTEGRITY]: Ensure unbroken physical context & linguistic consistency across: {d}\n"
-      | .ContractIntegrity c => acc ++ s!"- [CONTRACT INTEGRITY AUDIT]: Fulfill exact semantic promise without empty fallbacks or silent swallows for: {c}\n"
-      | .PhysicalBoundary p => acc ++ s!"- [PHYSICAL BOUNDARY CONTROL]: Enforce non-averaging entropy, rate limits, and fallback bounds for: {p}\n"
-    ) header
+      | .Ctx d s g => s!"- Context: Domain={d}, Sub={s}, Goal={g}\n"
+      | .Bias p m s d c => s!"- Bias Weights: P={p}, M={m}, S={s}, D={d}, C={c}\n"
+      | .Delta w l => s!"- Decision Delta: {w} > {l}\n"
+      | .ShiftPlus t => s!"- Enabled Constraint: {t}\n"
+      | .ShiftMinus t => s!"- Suppressed Constraint: {t}\n"
+      | .ShiftMandatory t => s!"- Mandatory Constraint: {t}\n"
+      | .Concept ts => s!"- Active Concepts: {ts}\n"
+      | .DensityFocus t => s!"- [HIGH-DENSITY FOCUS]: Eliminate generalities/filler. Concentrate exact facts & structure on: {t}\n"
+      | .DensitySlack t => s!"- [LOW-DENSITY SLACK]: State concisely in 1-2 sentences. Retain spatial/cultural silence on: {t}\n"
+      | .CadenceDyna pat => s!"- [CADENCE RHYTHM DYNAMICS]: Vary sentence lengths sharply according to sequence [{String.intercalate ", " (pat.map toString)}]\n"
+      | .IrreversibleShift b a => s!"- [IRREVERSIBLE STATE TRANSITION]: Permanently transform state from '{b}' -> '{a}'. DO NOT reset to initial state.\n"
+      | .ExpectationGap p r => s!"- [EXPECTATION GAP / SUBVERSION]: Undermine user's implicit prediction '{p}' with logical reality '{r}'.\n"
+      | .ConflictTradeoff a b => s!"- [GENUINE CONFLICT TRADEOFF]: Enforce unavoidable choice between '{a}' vs '{b}'. Both must entail severe cost.\n"
+      | .NarrativePerspective r t => s!"- [NARRATIVE PERSPECTIVE & TONE]: Adopt narrator role '{r}' with tone '{t}'.\n"
+      | .Sanctuary v => s!"- [STEP 1 SANCTUARY]: Build highly sophisticated, unyielding moral/idealistic sanctuary around: {v}\n"
+      | .Friction c => s!"- [STEP 2 FRICTION]: Depict fierce internal conflict between the unyielding principle and: {c}\n"
+      | .LogicalCrush l => s!"- [STEP 3 LOGICAL CRUSH]: Deconstruct the virtue through rigorous, inescapable logic of: {l}\n"
+      | .IrreversibleStain s => s!"- [STEP 4 IRREVERSIBLE STAIN]: Depict the enduring spiritual stain and dark aesthetic where the entity observes its own ruined virtue: {s}\n"
+      | .CoreValue p => s!"- [CHARACTER CORE VALUE]: Unyielding core identity & choice principle: {p}. DO NOT drift or alter without explicit narrative cause.\n"
+      | .Idiolect t h => s!"- [CHARACTER IDIOLECT & PERSONA]: Persona tone '{t}', speech habit '{h}'. Maintain inviolable voice identity.\n"
+      | .InformationBoundary k u => s!"- [INFORMATION BOUNDARY / ASYMMETRY]: Known facts '{k}', Blindspots/Unknowns '{u}'. Strictly prohibit meta-knowledge leakage.\n"
+      | .TimelinePhase s e => s!"- [TIMELINE & EXPERIENCE STAGE]: Growth stage '{s}', Accumulated experience '{e}'. Reflect depth of losses & gains.\n"
+      | .DataLifeline d => s!"- [DATA LIFELINE INTEGRITY]: Ensure unbroken physical context & linguistic consistency across: {d}\n"
+      | .ContractIntegrity c => s!"- [CONTRACT INTEGRITY AUDIT]: Fulfill exact semantic promise without empty fallbacks or silent swallows for: {c}\n"
+      | .PhysicalBoundary p => s!"- [PHYSICAL BOUNDARY CONTROL]: Enforce non-averaging entropy, rate limits, and fallback bounds for: {p}\n"
+      | .Spec _ => ""
+    )
+    "## [HV-CAD Vector-State Injection & Architectural Auditor Mandate]\n" ++ String.join lines
 
 /-- メッセージの先頭に .vlog ステートを注入する -/
 def injectVlogState (nodes : List VlogNode) (msg : Message) : Message := Id.run do
@@ -353,48 +354,24 @@ def injectVlogState (nodes : List VlogNode) (msg : Message) : Message := Id.run 
 
   return { msg with parts := updatedParts.reverse }
 
--- ===========================================================================
--- 試案㋢： @BIAS → LlmRequestOptions 物理マッピング
--- ===========================================================================
-
-/--
-@BIASノードの各パラメータを LlmRequestOptions に変換する。
-
-パラメータ定義：
-  - D (Determinism, 0.0–1.0): 高いほど決定論的。temperature = 1.0 - D
-  - P (Precision,    0.0–1.0): 语彙分布の集中度。topP としてそのまま使用。
-  - M (MaxContext,   0.0–1.0): 将来の maxTokens 制御用に保留（現時点未接続）。
-  - S, C: テキスト注入側の強調度制御用に保留。
--/
+/-- VlogSpec または VlogNode リストから LlmRequestOptions への物理マッピング -/
 def biasToRequestOptions (nodes : List VlogNode) : Option Lyceum.LlmRequestOptions :=
-  let biasOpt := nodes.findSome? (fun n => match n with | .Bias p m s d c => some (p, m, s, d, c) | _ => none)
-  match biasOpt with
-  | none => none
-  | some (p, _m, _s, d, _c) =>
-    let temperature := some (max 0.0 (min 2.0 (1.0 - d)))
-    let topP        := if p > 0.0 && p <= 1.0 then some p else none
-    some { temperature := temperature, topP := topP, maxTokens := none }
+  let spec := nodesToSpec nodes
+  if spec.physical.temperature.isSome || spec.physical.topP.isSome || spec.physical.maxTokens.isSome then
+    some { temperature := spec.physical.temperature, topP := spec.physical.topP, maxTokens := spec.physical.maxTokens }
+  else
+    none
 
--- ===========================================================================
--- 試案㋣： ! (Mandatory) 制約のプリフライトチェック
--- ===========================================================================
-
-/--
-@ShiftMandatory ノードの制約名リストを抽出する。
--/
+/-- @ShiftMandatory ノードの制約名リストを抽出する -/
 def extractMandatoryConstraints (nodes : List VlogNode) : List String :=
-  nodes.filterMap (fun n => match n with | .ShiftMandatory t => some t | _ => none)
+  let spec := nodesToSpec nodes
+  spec.semantic.mandatory ++ nodes.filterMap (fun n => match n with | .ShiftMandatory t => some t | _ => none)
 
-/--
-制約名と入力テキストによるキーワード照合による充足判定。
-制約名の各トークン（アンダースコア分割）が入力に存在すれば充足とみなす。
-不充足の場合は PolicyViolation エラーを返す。
--/
+/-- 制約名のプリフライトチェック -/
 def checkMandatoryConstraints
     (nodes : List VlogNode) (input : String) : Except Lyceum.AppError Unit :=
   let constraints := extractMandatoryConstraints nodes
   let inputLower := input.toLower
-  -- 制約名を "_" で分割し、どのトークンも入力に含まれない制約を未充足とみなす
   let unmet := constraints.filter (fun constraint =>
     let tokens := (constraint.toLower).splitOn "_"
     !tokens.any (fun token => !token.isEmpty && inputLower.contains token))
